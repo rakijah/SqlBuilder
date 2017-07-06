@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{7181699E-2EEB-41E0-93F9-4739FA59723D}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>SqlBuildTest</RootNamespace>
-    <AssemblyName>SqlBuildTest</AssemblyName>
+    <RootNamespace>SqlBuilderTest</RootNamespace>
+    <AssemblyName>SqlBuilderTest</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

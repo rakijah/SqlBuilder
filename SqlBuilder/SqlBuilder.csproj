@@ -7,8 +7,8 @@
     <ProjectGuid>{C864DE82-4145-47C7-8FB4-C57C38B29992}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SqlBuild</RootNamespace>
-    <AssemblyName>SqlBuild</AssemblyName>
+    <RootNamespace>SqlBuilder</RootNamespace>
+    <AssemblyName>SqlBuilder</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
