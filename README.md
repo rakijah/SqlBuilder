@@ -4,8 +4,8 @@ This library provides a quick and easy way to build an SQL command string throug
 # Usage  
 `SqlBuild.Build()` to generate a new `BuildSelectCommand`. From there you can chain commands until you're done with your entire SQL command.
 
-`AddColumn`/`AddColumns`: Add one or more columns to the selection (SELECT <columns> FROM...)  
-`AddTable`: Add a table to select from (FROM <table>)  
+`AddColumn`/`AddColumns`: Add one or more columns to the selection (SELECT columns FROM...)  
+`AddTable`: Add a table to select from (FROM table)  
 `AddJoin`: Add a JOIN to the SQL command  
 `CreateCondition`: Begins creation of the WHERE clause  
 `CreateSort`: Begins creation of the ORDER BY clause  
