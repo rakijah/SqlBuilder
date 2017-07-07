@@ -12,7 +12,7 @@ namespace SqlBuilder
         private List<string> _selectedColumns;
         private List<SqlJoin> _joins;
         private BuiltSqlSort _sort;
-        private BuiltSqlCondition _condition;
+        private BuiltSqlCondition<BuiltSelectCommand> _condition;
         
 
         internal BuiltSelectCommand()
@@ -81,11 +81,11 @@ namespace SqlBuilder
 
         /// <summary>
         /// Creates a WHERE clause for this BuiltSqlCommand. 
-        /// Calling this twice on a BuiltSelectCommand will overwrite the first call
+        /// Calling this twice on a BuiltSelectCommand will overwrite the first call.
         /// </summary>
-        public BuiltSqlCondition CreateCondition()
+        public BuiltSqlCondition<BuiltSelectCommand> Where()
         {
-            _condition = new BuiltSqlCondition(this);
+            _condition = new BuiltSqlCondition<BuiltSelectCommand>(this);
             return _condition;
         }
 
@@ -93,7 +93,7 @@ namespace SqlBuilder
         /// Creates a sort for this BuiltSelectCommand.
         /// Calling this twice on a BuiltSelectCommand overwrites the first call.
         /// </summary>
-        public BuiltSqlSort CreateSort()
+        public BuiltSqlSort OrderBy()
         {
             _sort = new BuiltSqlSort(this);
             return _sort;
@@ -120,7 +120,7 @@ namespace SqlBuilder
             sb.Append($" FROM {_fromTables.Zip(", ")}");
 
 
-            if (_condition != null && _condition.ConditionComponents.Count > 0)
+            if (_condition != null)
             {
                 sb.Append($" {_condition.ToString()}");
             }

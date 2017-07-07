@@ -19,7 +19,7 @@ namespace SqlBuildTest
                                          .AddTable(tableUsers)
                                          .AddJoin(tableUsers, "id", tableAddresses, "userid")
                                          .AddColumns(tableUsers, "postcode", "street")
-                                         .CreateCondition()
+                                         .Where()
                                             .BeginBlock()
                                             .AddCondition(tableUsers, "lastname", "Jones", "=", '"')
                                             .And()
@@ -28,11 +28,10 @@ namespace SqlBuildTest
                                             .Or()
                                             .AddCondition(tableUsers, "id", "50", ">", '"')
                                             .Finish()
-                                         .CreateSort()
+                                         .OrderBy()
                                             .SortBy(tableUsers, "firstname", SqlSortMode.DESCENDING)
                                             .Finish();
-            string selectsql = selectSql.ToString();
-            Console.WriteLine(selectsql);
+            Console.WriteLine(selectSql);
             Console.ReadKey();
 
             var insertSql = SqlBuild.Insert()
@@ -42,7 +41,16 @@ namespace SqlBuildTest
                                             .AddValueFor("password", "dGhlIGdhbWU=", '"')
                                             .AddValueFor("email", "rakijah@fakemail.com")
                                             .Finish();
-                                        
+            Console.WriteLine(insertSql);
+            Console.ReadKey();
+
+            var deleteSql = SqlBuild.Delete()
+                                        .From(tableUsers)
+                                        .Where()
+                                            .AddCondition(tableUsers, "id", "10", "<")
+                                            .Finish();
+            Console.WriteLine(deleteSql);
+            Console.ReadKey();
         }
     }
 }

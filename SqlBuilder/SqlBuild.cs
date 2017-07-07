@@ -18,6 +18,11 @@ namespace SqlBuilder
             return new BuiltInsertCommand();
         }
 
+        public static BuiltDeleteCommand Delete()
+        {
+            return new BuiltDeleteCommand();
+        }
+
         public static string DateToString(DateTime dateTime, SqlDateFormat format)
         {
             switch(format)

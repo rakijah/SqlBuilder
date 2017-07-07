@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BuiltDeleteCommand.cs" />
     <Compile Include="BuiltInsertCommand.cs" />
     <Compile Include="BuiltInsertValue.cs" />
     <Compile Include="BuiltSelectCommand.cs" />
