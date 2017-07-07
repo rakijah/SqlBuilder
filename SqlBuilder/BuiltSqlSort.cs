@@ -53,9 +53,9 @@ namespace SqlBuilder
         /// <summary>
         /// Generates the ORDER BY clause created by this BuiltSqlSort.
         /// </summary>
-        public override string ToString()
+        public string Generate()
         {
-            if(_sortingParametersAscending.Count == 0 && _sortingParametersDescending.Count == 0)
+            if (_sortingParametersAscending.Count == 0 && _sortingParametersDescending.Count == 0)
             {
                 return "";
             }
@@ -73,6 +73,12 @@ namespace SqlBuilder
                 sb.Append($" DESC");
             }
             return sb.ToString();
+        }
+
+
+        public override string ToString()
+        {
+            return Generate();
         }
     }
 

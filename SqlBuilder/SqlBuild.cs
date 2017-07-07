@@ -8,9 +8,14 @@ namespace SqlBuilder
 {
     public static class SqlBuild
     {
-        public static BuiltSelectCommand Build()
+        public static BuiltSelectCommand Select()
         {
             return new BuiltSelectCommand();
+        }
+
+        public static BuiltInsertCommand Insert()
+        {
+            return new BuiltInsertCommand();
         }
 
         public static string DateToString(DateTime dateTime, SqlDateFormat format)

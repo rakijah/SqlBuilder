@@ -40,6 +40,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BuiltInsertCommand.cs" />
+    <Compile Include="BuiltInsertValue.cs" />
     <Compile Include="BuiltSelectCommand.cs" />
     <Compile Include="BuiltSqlCondition.cs" />
     <Compile Include="BuiltSqlSort.cs" />

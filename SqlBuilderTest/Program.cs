@@ -14,7 +14,7 @@ namespace SqlBuildTest
         {
             string tableUsers = "users";
             string tableAddresses = "adresses";
-            var builtSql = SqlBuild.Build()
+            var selectSql = SqlBuild.Select()
                                          .AddColumns(tableUsers, "username", "email")
                                          .AddTable(tableUsers)
                                          .AddJoin(tableUsers, "id", tableAddresses, "userid")
@@ -31,9 +31,18 @@ namespace SqlBuildTest
                                          .CreateSort()
                                             .SortBy(tableUsers, "firstname", SqlSortMode.DESCENDING)
                                             .Finish();
-            string sql = builtSql.ToString();
-            Console.WriteLine(sql);
+            string selectsql = selectSql.ToString();
+            Console.WriteLine(selectsql);
             Console.ReadKey();
+
+            var insertSql = SqlBuild.Insert()
+                                        .Into(tableUsers, "username", "password", "email")
+                                        .CreateValues()
+                                            .AddValueFor("username", "rakijah", '"')
+                                            .AddValueFor("password", "dGhlIGdhbWU=", '"')
+                                            .AddValueFor("email", "rakijah@fakemail.com")
+                                            .Finish();
+                                        
         }
     }
 }

@@ -102,10 +102,10 @@ namespace SqlBuilder
         /// <summary>
         /// Generates the SQL Statement that was created by this BuiltSelectCommand
         /// </summary>
-        public override string ToString()
+        public string Generate()
         {
-            if(_fromTables.Count == 0)
-                throw new FormatException("Use .AddTable at least once before calling ToString");
+            if (_fromTables.Count == 0)
+                throw new FormatException("Use .AddTable at least once before generating the SQL string.");
 
             StringBuilder sb = new StringBuilder($"SELECT ");
             if (_selectedColumns.Count == 0)
@@ -118,22 +118,27 @@ namespace SqlBuilder
             }
 
             sb.Append($" FROM {_fromTables.Zip(", ")}");
-            
 
-            if(_condition != null && _condition.ConditionComponents.Count > 0)
+
+            if (_condition != null && _condition.ConditionComponents.Count > 0)
             {
                 sb.Append($" {_condition.ToString()}");
             }
-            if(_joins.Count > 0)
+            if (_joins.Count > 0)
             {
                 sb.Append($" {_joins.Select(j => j.ToString()).ToList().Zip(" ")}");
             }
 
-            if(_sort != null)
+            if (_sort != null)
             {
                 sb.Append($" {_sort.ToString()}");
             }
             return sb.ToString();
+        }
+
+        public override string ToString()
+        {
+            return Generate();
         }
     }
 

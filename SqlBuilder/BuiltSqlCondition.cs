@@ -137,31 +137,32 @@ namespace SqlBuilder
 
             return _parent;
         }
-
-        /// <summary>
-        /// Generates the WHERE clause created by this BuiltSqlCondition.
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString()
+        
+        public string Generate()
         {
             if (ConditionComponents.Count == 0)
                 return "";
 
             StringBuilder sb = new StringBuilder("WHERE ");
-            for(int i = 0; i < ConditionComponents.Count; i++)
+            for (int i = 0; i < ConditionComponents.Count; i++)
             {
                 string c = ConditionComponents[i];
                 sb.Append(c);
-                if(i != ConditionComponents.Count - 1 && 
+                if (i != ConditionComponents.Count - 1 &&
                    c != "(")
                 {
-                    if(i > ConditionComponents.Count - 2 || ConditionComponents[i + 1] != ")")
+                    if (i > ConditionComponents.Count - 2 || ConditionComponents[i + 1] != ")")
                     {
                         sb.Append(" ");
                     }
                 }
             }
             return sb.ToString();
+        }
+
+        public override string ToString()
+        {
+            return Generate();
         }
     }
 }
