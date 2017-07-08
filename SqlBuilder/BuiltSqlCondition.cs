@@ -153,6 +153,9 @@ namespace SqlBuilder
             return _parent;
         }
         
+        /// <summary>
+        /// Generates the condition string, always starting with "WHERE" ending either with an arbitrary condition or a ")".
+        /// </summary>
         public string Generate()
         {
             if (_conditionExpressions.Count == 0)

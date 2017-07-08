@@ -51,7 +51,7 @@ namespace SqlBuilder
         }
 
         /// <summary>
-        /// Generates the ORDER BY clause created by this BuiltSqlSort.
+        /// Generates the ORDER BY clause string, always starting with "ORDER BY" and ending with either a column name or "ASC/DESC".
         /// </summary>
         public string Generate()
         {

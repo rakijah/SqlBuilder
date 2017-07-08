@@ -90,7 +90,7 @@ namespace SqlBuilder
         }
 
         /// <summary>
-        /// Generates the SQL Statement that was created by this BuiltSelectCommand
+        /// Generates the SELECT command string.
         /// </summary>
         public string Generate()
         {

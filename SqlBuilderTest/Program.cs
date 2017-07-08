@@ -40,7 +40,9 @@ namespace SqlBuildTest
                                             .AddValueFor("username", "rakijah", '"')
                                             .AddValueFor("password", "dGhlIGdhbWU=", '"')
                                             .AddValueFor("email", "rakijah@fakemail.com")
-                                            .Finish();
+                                            .Finish()
+                                        .AddRow("user2", "ZmVsbCBmb3IgaXQgYWdhaW4=", "user2@fakemail.com");
+
             Console.WriteLine(insertSql);
             Console.ReadLine();
 

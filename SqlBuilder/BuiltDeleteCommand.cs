@@ -36,6 +36,10 @@ namespace SqlBuilder
             return this;
         }
 
+        /// <summary>
+        /// Generates the DELETE command string. 
+        /// </summary>
+        /// <returns></returns>
         public string Generate()
         {
             if (string.IsNullOrEmpty(_table))

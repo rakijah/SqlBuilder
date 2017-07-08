@@ -38,13 +38,40 @@ namespace SqlBuilder
         public BuiltInsertValue AddValues()
         {
             if (_columns == null)
-                throw new Exception("Use Into to initialise the table and columns before calling CreateValues.");
+                throw new Exception("Use Into to initialise the table and columns before calling this function.");
 
             var newRow = new BuiltInsertValue(this, _columns);
             _rowValues.Add(newRow);
             return newRow;
         }
         
+        /// <summary>
+        /// Adds a row to this INSERT command by providing values for every column (in the correct order).
+        /// This function does not allow you to surround the values with a specific character, though.
+        /// </summary>
+        /// <param name="orderedValues">The values to be inserted.</param>
+        public BuiltInsertCommand AddRow(params string[] orderedValues)
+        {
+            if (_columns == null)
+                throw new Exception("Use Into to initialise the table and columns before calling this function.");
+
+            if (orderedValues.Length != _columns.Count)
+                throw new Exception("Column count does not match amount of specified values.");
+
+
+            var row = new BuiltInsertValue(this, _columns);
+            for (int i = 0; i < orderedValues.Length; i++)
+            {
+                row.AddValueFor(_columns[i], orderedValues[i]);
+            }
+            _rowValues.Add(row);
+            return this;
+        }
+
+        /// <summary>
+        /// Generates the INSERT command string, starting with "INSERT INTO" and always ending with a ")".
+        /// </summary>
+        /// <returns></returns>
         public string Generate()
         {
             if (string.IsNullOrWhiteSpace(_table))

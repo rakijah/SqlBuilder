@@ -28,13 +28,14 @@ After calling `OrderBy` you are dealing with a `BuiltSqlSort` object, which expo
 The `BuiltInsertCommand` exposes the following methods:
 * `Into`: Specify the table and column names to be used in this insert command.
 * `AddValues`: Add a new group of values to be inserted. Has to be called after `Into()`.
+* `AddRow`: Allows you to add an entire row by specifying the values in the same order as you added the columns. Note: this does not allow you to specify the surrounding character for values, so either provide them with your value string or use `AddValues`.
 * `ToString`/`Generate`: Generate the actual SQL command string.
 
 After calling `AddValues()` you are dealing with a `BuiltInsertValue` object. Use the following methods to specify the values to be inserted:
 * `AddValueFor`: Allows you to specify the value for a specific column, as well as giving you the option of enclosing the value in a char (for example `"value"` for strings).
 * `Finish`: Ends the creation and returns the parent `BuiltInsertCommand` to allow for continous chaining.
 
-`AddValues()` can be called multiple times to insert multiple rows in a single SQL command.
+`AddValues()` and `AddRow()` can be called multiple times to insert multiple rows in a single SQL command.
 ## Delete command
 The `BuiltDeleteCommand` exposes the following methods:
 * `From`: Specify the table from which to delete.
