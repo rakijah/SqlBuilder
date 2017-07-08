@@ -16,7 +16,6 @@ namespace SqlBuilder
         /// </summary>
         /// <param name="strings"></param>
         /// <param name="inBetween"></param>
-        /// <returns></returns>
         public static string Zip(this List<string> strings, string inBetween)
         {
             StringBuilder sb = new StringBuilder();

@@ -9,8 +9,8 @@ namespace SqlBuilder
     public class BuiltSqlCondition<T>
     {
         private List<string> _conditionExpressions { get; }
-        private T _parent;
-        private int _currentBlockLayer = 0;
+        private readonly T _parent;
+        private int _currentBlockLayer;
         private bool _lastComponentWasLogicExpression = true;
 
         internal BuiltSqlCondition(T parent)
@@ -26,8 +26,7 @@ namespace SqlBuilder
         /// <param name="firstColumn">The column of the lefthand table to be compared.</param>
         /// <param name="secondTable">The righthhand table used for the comparison.</param>
         /// <param name="secondColumn">The column of the righthand table to be compared.</param>
-        /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '<>' '>' etc.</param>
-        /// <returns></returns>
+        /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '&lt;&gt;' '&gt;' etc.</param>
         public BuiltSqlCondition<T> AddCondition(string firstTable, string firstColumn, string secondTable, string secondColumn, string comparisonOperator)
         {
             if (!_lastComponentWasLogicExpression)
@@ -44,7 +43,7 @@ namespace SqlBuilder
         /// <param name="table">The table to be used in the comparison.</param>
         /// <param name="column">The column to be compared.</param>
         /// <param name="value">The value to be compared against.</param>
-        /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '<>' '>' etc.</param>
+        /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '&lt;&gt;' '&gt;' etc.</param>
         /// <param name="putAroundValue">Optional character that encloses the value if != \0</param>
         public BuiltSqlCondition<T> AddCondition(string table, string column, string value, string comparisonOperator, char putAroundValue = '\0')
         {
@@ -66,7 +65,6 @@ namespace SqlBuilder
         /// </summary>
         /// <param name="table">The table to be used in the comparison.</param>
         /// <param name="column">The column to be compared.</param>
-        /// <returns></returns>
         public BuiltSqlCondition<T> AddCondition(string table, string column)
         {
             if(!_lastComponentWasLogicExpression)
@@ -169,13 +167,10 @@ namespace SqlBuilder
             {
                 string c = _conditionExpressions[i];
                 sb.Append(c);
-                if (i != _conditionExpressions.Count - 1 &&
-                   c != "(")
+                if (i == _conditionExpressions.Count - 1 || c == "(") continue;
+                if (i > _conditionExpressions.Count - 2 || _conditionExpressions[i + 1] != ")")
                 {
-                    if (i > _conditionExpressions.Count - 2 || _conditionExpressions[i + 1] != ")")
-                    {
-                        sb.Append(" ");
-                    }
+                    sb.Append(" ");
                 }
             }
             return sb.ToString();

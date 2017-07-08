@@ -25,7 +25,6 @@ namespace SqlBuilder
         /// <param name="table">The table that the column resides in.</param>
         /// <param name="column">The column to be used for sorting.</param>
         /// <param name="mode">The sorting mode to be used for this column.</param>
-        /// <returns></returns>
         public BuiltSqlSort SortBy(string table, string column, SqlSortMode mode)
         {
             switch(mode)
@@ -36,6 +35,10 @@ namespace SqlBuilder
                 case SqlSortMode.DESCENDING:
                     _sortingParametersDescending.Add($"{table}.{column}");
                     break;
+                case SqlSortMode.NONE:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }
             
             return this;
@@ -44,7 +47,6 @@ namespace SqlBuilder
         /// <summary>
         /// Finishes building this sort and returns the parent BuiltSelectCommand.
         /// </summary>
-        /// <returns></returns>
         public BuiltSelectCommand Finish()
         {
             return _parent;
@@ -64,14 +66,14 @@ namespace SqlBuilder
             if (_sortingParametersAscending.Count > 0)
             {
                 sb.Append(_sortingParametersAscending.Zip(", "));
-                sb.Append($" ASC, ");
+                sb.Append(" ASC, ");
             }
 
-            if (_sortingParametersDescending.Count > 0)
-            {
-                sb.Append(_sortingParametersDescending.Zip(", "));
-                sb.Append($" DESC");
-            }
+            if (_sortingParametersDescending.Count <= 0)
+                return sb.ToString();
+
+            sb.Append(_sortingParametersDescending.Zip(", "));
+            sb.Append(" DESC");
             return sb.ToString();
         }
 

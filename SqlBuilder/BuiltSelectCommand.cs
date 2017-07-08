@@ -26,7 +26,6 @@ namespace SqlBuilder
         /// Adds a table to used in the FROM clause.
         /// </summary>
         /// <param name="table">The table to be added.</param>
-        /// <returns></returns>
         public BuiltSelectCommand AddTable(string table)
         {
             _fromTables.Add(table);
@@ -38,14 +37,13 @@ namespace SqlBuilder
         /// </summary>
         /// <param name="tableName">The table containing the columns.</param>
         /// <param name="columns">The columns to be selected.</param>
-        /// <returns></returns>
         public BuiltSelectCommand AddColumns(string tableName, params string[] columns)
         {
-            for (int i = 0; i < columns.Length; i++)
+            foreach (string column in columns)
             {
-                string col = $"{tableName}.{columns[i]}";
-                if(!_selectedColumns.Contains(col))
-                    _selectedColumns.Add(col);
+                string fullyQualified = $"{tableName}.{column}";
+                if(!_selectedColumns.Contains(fullyQualified))
+                    _selectedColumns.Add(fullyQualified);
             }
             return this;
         }
@@ -59,7 +57,7 @@ namespace SqlBuilder
         /// <param name="newColumn">The column to use from the new table.</param>
         public BuiltSelectCommand Join(string existingTable, string existingColumn, string newTable, string newColumn)
         {
-            _joins.Add(new SqlJoin()
+            _joins.Add(new SqlJoin
             {
                 FirstTable = existingTable,
                 SecondTable = newTable,
@@ -95,24 +93,17 @@ namespace SqlBuilder
         public string Generate()
         {
             if (_fromTables.Count == 0)
-                throw new FormatException("Use .AddTable at least once before generating the SQL string.");
+                throw new FormatException("Use .AddTable at least once before generating the Sql_Server string.");
 
-            StringBuilder sb = new StringBuilder($"SELECT ");
-            if (_selectedColumns.Count == 0)
-            {
-                sb.Append("*");
-            }
-            else
-            {
-                sb.Append($"{_selectedColumns.Zip(", ")}");
-            }
+            StringBuilder sb = new StringBuilder("SELECT ");
+            sb.Append(_selectedColumns.Count == 0 ? "*" : $"{_selectedColumns.Zip(", ")}");
 
             sb.Append($" FROM {_fromTables.Zip(", ")}");
 
 
             if (_condition != null)
             {
-                sb.Append($" {_condition.ToString()}");
+                sb.Append($" {_condition}");
             }
             if (_joins.Count > 0)
             {
@@ -121,7 +112,7 @@ namespace SqlBuilder
 
             if (_sort != null)
             {
-                sb.Append($" {_sort.ToString()}");
+                sb.Append($" {_sort}");
             }
             return sb.ToString();
         }

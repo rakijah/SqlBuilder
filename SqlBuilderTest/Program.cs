@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using SqlBuilder;
 using System.IO;
 
-namespace SqlBuildTest
+namespace SqlBuilderTest
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             string tableUsers = "users";
             string tableAddresses = "adresses";
@@ -55,7 +55,7 @@ namespace SqlBuildTest
             Console.ReadLine();
         }
 
-        static string SurroundWith(string str, char surroundWith)
+        private static string SurroundWith(string str, char surroundWith)
         {
             return $"{surroundWith}{str}{surroundWith}";
         }

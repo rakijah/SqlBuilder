@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SqlBuilder
 {
@@ -29,7 +26,6 @@ namespace SqlBuilder
         /// Specify the table to delete from.
         /// </summary>
         /// <param name="table">The name of the table you want to delete from.</param>
-        /// <returns></returns>
         public BuiltDeleteCommand From(string table)
         {
             _table = table;
@@ -39,7 +35,6 @@ namespace SqlBuilder
         /// <summary>
         /// Generates the DELETE command string. 
         /// </summary>
-        /// <returns></returns>
         public string Generate()
         {
             if (string.IsNullOrEmpty(_table))

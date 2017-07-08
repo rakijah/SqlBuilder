@@ -22,7 +22,6 @@ namespace SqlBuilder
         /// </summary>
         /// <param name="table">The table to insert into.</param>
         /// <param name="columns">The names of the columns you wish to specify values for.</param>
-        /// <returns></returns>
         public BuiltInsertCommand Into(string table, params string[] columns)
         {
             _table = table;
@@ -34,7 +33,6 @@ namespace SqlBuilder
         /// Add a row of values to this INSERT command.
         /// Must be called after Into().
         /// </summary>
-        /// <returns></returns>
         public BuiltInsertValue AddValues()
         {
             if (_columns == null)
@@ -71,7 +69,6 @@ namespace SqlBuilder
         /// <summary>
         /// Generates the INSERT command string, starting with "INSERT INTO" and always ending with a ")".
         /// </summary>
-        /// <returns></returns>
         public string Generate()
         {
             if (string.IsNullOrWhiteSpace(_table))
@@ -85,7 +82,7 @@ namespace SqlBuilder
 
             StringBuilder sb = new StringBuilder($"INSERT INTO { _table } (");
             sb.Append(_columns.Zip(", "));
-            sb.Append($") VALUES ");
+            sb.Append(") VALUES ");
             for (int i = 0; i < _rowValues.Count; i++)
             {
                 var row = _rowValues[i];

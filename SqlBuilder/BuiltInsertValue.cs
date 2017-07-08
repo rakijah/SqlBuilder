@@ -19,6 +19,12 @@ namespace SqlBuilder
             _values = new Dictionary<string, string>();
         }
 
+        /// <summary>
+        /// Adds a value for a specific column.
+        /// </summary>
+        /// <param name="column">The column that is going to hold the value.</param>
+        /// <param name="value">The value to be inserted.</param>
+        /// <param name="putAroundValue"></param>
         public BuiltInsertValue AddValueFor(string column, string value, char putAroundValue = '\0')
         {
             if (!_columns.Contains(column))
@@ -40,6 +46,9 @@ namespace SqlBuilder
             return _parent;
         }
 
+        /// <summary>
+        /// Generates the actual row value string, always starting with "(" and ending in ")".
+        /// </summary>
         public string Generate()
         {
             if (!_columns.All(c => _values.ContainsKey(c)))

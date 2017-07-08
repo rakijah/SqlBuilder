@@ -37,24 +37,23 @@ namespace SqlBuilder
         /// </summary>
         /// <param name="dateTime">The DateTime object to be parsed.</param>
         /// <param name="format">The provider whose format is to be used.</param>
-        /// <returns></returns>
         public static string DateToString(DateTime dateTime, SqlDateFormat format)
         {
             switch(format)
             {
                 case SqlDateFormat.Oracle:
                     return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
-                case SqlDateFormat.SQL:
+                case SqlDateFormat.SqlServer:
                     return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(format), format, null);
             }
-
-            return "";
         }
     }
 
     public enum SqlDateFormat
     {
         Oracle,
-        SQL
+        SqlServer
     }
 }
