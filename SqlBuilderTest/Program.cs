@@ -39,9 +39,9 @@ namespace SqlBuildTest
                                         .AddValues()
                                             .AddValueFor("username", "rakijah", '"')
                                             .AddValueFor("password", "dGhlIGdhbWU=", '"')
-                                            .AddValueFor("email", "rakijah@fakemail.com")
+                                            .AddValueFor("email", "rakijah@fakemail.com", '"')
                                             .Finish()
-                                        .AddRow("user2", "ZmVsbCBmb3IgaXQgYWdhaW4=", "user2@fakemail.com");
+                                        .AddRow(SurroundWith("user2", '"'), SurroundWith("ZmVsbCBmb3IgaXQgYWdhaW4=", '"'), SurroundWith("user2@fakemail.com", '"'));
 
             Console.WriteLine(insertSql);
             Console.ReadLine();
@@ -53,6 +53,11 @@ namespace SqlBuildTest
                                             .Finish();
             Console.WriteLine(deleteSql);
             Console.ReadLine();
+        }
+
+        static string SurroundWith(string str, char surroundWith)
+        {
+            return $"{surroundWith}{str}{surroundWith}";
         }
     }
 }
