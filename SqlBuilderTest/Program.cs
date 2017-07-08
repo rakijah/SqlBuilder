@@ -17,7 +17,7 @@ namespace SqlBuildTest
             var selectSql = SqlBuild.Select()
                                          .AddColumns(tableUsers, "username", "email")
                                          .AddTable(tableUsers)
-                                         .AddJoin(tableUsers, "id", tableAddresses, "userid")
+                                         .Join(tableUsers, "id", tableAddresses, "userid")
                                          .AddColumns(tableUsers, "postcode", "street")
                                          .Where()
                                             .BeginBlock()
@@ -32,17 +32,17 @@ namespace SqlBuildTest
                                             .SortBy(tableUsers, "firstname", SqlSortMode.DESCENDING)
                                             .Finish();
             Console.WriteLine(selectSql);
-            Console.ReadKey();
+            Console.ReadLine();
 
             var insertSql = SqlBuild.Insert()
                                         .Into(tableUsers, "username", "password", "email")
-                                        .CreateValues()
+                                        .AddValues()
                                             .AddValueFor("username", "rakijah", '"')
                                             .AddValueFor("password", "dGhlIGdhbWU=", '"')
                                             .AddValueFor("email", "rakijah@fakemail.com")
                                             .Finish();
             Console.WriteLine(insertSql);
-            Console.ReadKey();
+            Console.ReadLine();
 
             var deleteSql = SqlBuild.Delete()
                                         .From(tableUsers)
@@ -50,7 +50,7 @@ namespace SqlBuildTest
                                             .AddCondition(tableUsers, "id", "10", "<")
                                             .Finish();
             Console.WriteLine(deleteSql);
-            Console.ReadKey();
+            Console.ReadLine();
         }
     }
 }

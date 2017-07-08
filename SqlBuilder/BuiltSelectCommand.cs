@@ -32,19 +32,7 @@ namespace SqlBuilder
             _fromTables.Add(table);
             return this;
         }
-
-        /// <summary>
-        /// Add a column to be selected.
-        /// </summary>
-        /// <param name="tableName">The table containing the column.</param>
-        /// <param name="column">The column to be selected.</param>
-        /// <returns></returns>
-        public BuiltSelectCommand AddColumn(string tableName, string column)
-        {
-            _selectedColumns.Add($"{tableName}.{column}");
-            return this;
-        }
-
+        
         /// <summary>
         /// Add columns to be selected.
         /// </summary>
@@ -55,7 +43,9 @@ namespace SqlBuilder
         {
             for (int i = 0; i < columns.Length; i++)
             {
-                AddColumn(tableName, columns[i]);
+                string col = $"{tableName}.{columns[i]}";
+                if(!_selectedColumns.Contains(col))
+                    _selectedColumns.Add(col);
             }
             return this;
         }
@@ -67,7 +57,7 @@ namespace SqlBuilder
         /// <param name="existingColumn">The column to use from the existing table.</param>
         /// <param name="newTable">The new table of this join.</param>
         /// <param name="newColumn">The column to use from the new table.</param>
-        public BuiltSelectCommand AddJoin(string existingTable, string existingColumn, string newTable, string newColumn)
+        public BuiltSelectCommand Join(string existingTable, string existingColumn, string newTable, string newColumn)
         {
             _joins.Add(new SqlJoin()
             {

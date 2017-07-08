@@ -16,11 +16,20 @@ namespace SqlBuilder
 
         }
 
+        /// <summary>
+        /// Start creation of a contidion to apply to this DELETE command.
+        /// </summary>
         public BuiltSqlCondition<BuiltDeleteCommand> Where()
         {
             _condition = new BuiltSqlCondition<BuiltDeleteCommand>(this);
             return _condition;
         }
+
+        /// <summary>
+        /// Specify the table to delete from.
+        /// </summary>
+        /// <param name="table">The name of the table you want to delete from.</param>
+        /// <returns></returns>
         public BuiltDeleteCommand From(string table)
         {
             _table = table;
