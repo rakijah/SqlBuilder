@@ -97,6 +97,9 @@ namespace SqlBuilder
             return this;
         }
 
+        /// <summary>
+        /// Generates the ALTER TABLE command string.
+        /// </summary>
         public string Generate()
         {
             if (_components.Count == 0)

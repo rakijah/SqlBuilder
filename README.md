@@ -1,8 +1,9 @@
 # SqlBuilder  
-This library provides a quick and easy way to build an SQL command string through command-chaining. It's still in early development and currently only supports the `SELECT`, `INSERT` and `DELETE` commands. Sorting also needs to be redone, as there is currently no way to really specify sorting priority for multiple sorting columns.  
+This library provides a quick and easy way to build an SQL command string through command-chaining. It's still in early development and currently only supports the `SELECT`, `INSERT`,`DELETE` and basic `ALTER TABLE` commands. Sorting also needs to be redone, as there is currently no way to really specify sorting priority for multiple sorting columns.  
 
 # Usage  
-The `SqlBuild` class offers static methods to start building commands: `.Select()`, `.Delete()`, `.Insert()`. From there you can chain commands until you're done with your entire SQL command.
+First, call `SqlBuild.Configure()` to initialize the builder. Here you can specify your database provider, as well as whether or not table/column names should be wrapped in square brackets (i.e. *[table].[column]*).
+The `SqlBuild` class then offers static methods to start building commands: `.Select()`, `.Insert()`, `.Delete()`, `AlterTable()`. From there you can chain methods until you're done with your entire SQL command.
 
 ## Select command
 The `BuiltSelectCommand` exposes the following methods:
@@ -41,3 +42,11 @@ The `BuiltDeleteCommand` exposes the following methods:
 * `From`: Specify the table from which to delete.
 * `Where`: Same as the `BuiltSelectCommand`s `Where()` method.
 * `ToString`/`Generate`: Generate the actual SQL command string.
+
+## Alter table command
+The `BuiltAlterTableCommand` exposes the following methods:
+`RenameTable`: Rename the table.
+`Add`: Add a column to the table.
+`Drop`: Drop (delete) a column from the table.
+`AddPrimaryKey`: Add a primary key to the table.
+`ChangeColumnType`: Changes the type of a column.
