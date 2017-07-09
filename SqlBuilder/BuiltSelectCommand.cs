@@ -40,7 +40,7 @@ namespace SqlBuilder
         {
             foreach (string column in columns)
             {
-                string fullyQualified = $"{tableName}.{column}";
+                string fullyQualified = $"{Util.FormatSQL(tableName, column)}";
                 if(!_selectedColumns.Contains(fullyQualified))
                     _selectedColumns.Add(fullyQualified);
             }
@@ -97,7 +97,7 @@ namespace SqlBuilder
             StringBuilder sb = new StringBuilder("SELECT ");
             sb.Append(_selectedColumns.Count == 0 ? "*" : $"{_selectedColumns.Zip(", ")}");
 
-            sb.Append($" FROM {_fromTables.Zip(", ")}");
+            sb.Append($" FROM {_fromTables.Select(t => Util.FormatSQL(t)).ToList().Zip(", ")}");
 
 
             if (_condition != null)
@@ -131,7 +131,7 @@ namespace SqlBuilder
 
         public override string ToString()
         {
-            return $"JOIN {SecondTable} ON {FirstTable}.{FirstColumn}={SecondTable}.{SecondColumn}";
+            return $"JOIN {Util.FormatSQL(SecondTable)} ON {Util.FormatSQL(FirstTable, FirstColumn)}={Util.FormatSQL(SecondTable, SecondColumn)}";
         }
     }
 }

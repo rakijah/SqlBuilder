@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace SqlBuilder
@@ -78,8 +79,9 @@ namespace SqlBuilder
             if (_rowValues.Count == 0)
                 throw new Exception("Use CreateValues before calling ToString.");
 
-            StringBuilder sb = new StringBuilder($"INSERT INTO { _table } (");
-            sb.Append(_columns.Zip(", "));
+            StringBuilder sb = new StringBuilder($"INSERT INTO {Util.FormatSQL(_table)} (");
+            var colFormatted = _columns.Select(c => Util.FormatSQL(c)).ToList().Zip(", ");
+            sb.Append(colFormatted);
             sb.Append(") VALUES ");
             for (int i = 0; i < _rowValues.Count; i++)
             {

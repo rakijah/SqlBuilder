@@ -40,7 +40,7 @@ namespace SqlBuilder
             if (string.IsNullOrEmpty(_table))
                 throw new Exception("Table is not set.");
 
-            StringBuilder sb = new StringBuilder($"DELETE FROM {_table}");
+            StringBuilder sb = new StringBuilder($"DELETE FROM {Util.FormatSQL(_table)}");
             if(_condition != null)
             {
                 sb.Append($" {_condition.Generate()}");

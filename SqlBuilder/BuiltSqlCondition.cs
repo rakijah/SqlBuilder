@@ -31,7 +31,7 @@ namespace SqlBuilder
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
 
-            _conditionExpressions.Add($"{firstTable}.{firstColumn}{comparisonOperator}{secondTable}.{secondColumn}");
+            _conditionExpressions.Add($"{Util.FormatSQL(firstTable, firstColumn)}{comparisonOperator}{Util.FormatSQL(secondTable, secondColumn)}");
             return this;
         }
 
@@ -48,7 +48,7 @@ namespace SqlBuilder
             if (!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
-            string condition = $"{table}.{column}{comparisonOperator}";
+            string condition = $"{Util.FormatSQL(table, column)}{comparisonOperator}";
             if (putAroundValue == '\0')
                 condition += value;
             else
@@ -63,12 +63,12 @@ namespace SqlBuilder
         /// </summary>
         /// <param name="table">The table to be used in the comparison.</param>
         /// <param name="column">The column to be compared.</param>
-        public BuiltSqlCondition<T> AddCondition(string table, string column)
+        public BuiltSqlCondition<T> IsNull(string table, string column)
         {
             if(!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
-            _conditionExpressions.Add($"{table}.{column} IS NULL");
+            _conditionExpressions.Add($"{Util.FormatSQL(table, column)} IS NULL");
             return this;
         }
 

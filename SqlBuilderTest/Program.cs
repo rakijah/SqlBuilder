@@ -7,6 +7,8 @@ namespace SqlBuilderTest
     {
         private static void Main(string[] args)
         {
+            SqlBuild.Configure(DatabaseProvider.OracleBefore10G, false);
+
             string tableUsers = "users";
             string tableAddresses = "adresses";
             var selectSql = SqlBuild.Select()
@@ -18,7 +20,7 @@ namespace SqlBuilderTest
                                             .BeginBlock()
                                             .AddCondition(tableUsers, "lastname", "Jones", "=", '"')
                                             .And()
-                                            .AddCondition(tableAddresses, "state", "Ohio", ">")
+                                            .AddCondition(tableAddresses, "state", "Ohio", "=", '"')
                                             .EndBlock()
                                             .Or()
                                             .AddCondition(tableUsers, "id", "50", ">", '"')
@@ -26,8 +28,7 @@ namespace SqlBuilderTest
                                          .OrderBy()
                                             .SortBy(tableUsers, "firstname", SqlSortMode.DESCENDING)
                                             .Finish();
-            Console.WriteLine(selectSql);
-            Console.ReadLine();
+            Console.WriteLine(selectSql + Environment.NewLine);
 
             var insertSql = SqlBuild.Insert()
                                         .Into(tableUsers, "username", "password", "email")
@@ -38,15 +39,21 @@ namespace SqlBuilderTest
                                             .Finish()
                                         .AddRow(SurroundWith("user2", '"'), SurroundWith("ZmVsbCBmb3IgaXQgYWdhaW4=", '"'), SurroundWith("user2@fakemail.com", '"'));
 
-            Console.WriteLine(insertSql);
-            Console.ReadLine();
+            Console.WriteLine(insertSql + Environment.NewLine);
 
             var deleteSql = SqlBuild.Delete()
                                         .From(tableUsers)
                                         .Where()
                                             .AddCondition(tableUsers, "id", "10", "<")
                                             .Finish();
-            Console.WriteLine(deleteSql);
+            Console.WriteLine(deleteSql + Environment.NewLine);
+
+            var alterTableSql = SqlBuild.AlterTable("user")
+                                                    .Add("firstname", "varchar(50)", true)
+                                                    .Add("lastname", "varchar(50)", true)
+                                                    .Drop("fullname")
+                                                    .ChangeColumnType("username", "VARCHAR(255)");
+            Console.WriteLine(alterTableSql + Environment.NewLine);
             Console.ReadLine();
         }
 

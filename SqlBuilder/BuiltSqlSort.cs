@@ -28,13 +28,12 @@ namespace SqlBuilder
             switch(mode)
             {
                 case SqlSortMode.ASCENDING:
-                    _sortingParametersAscending.Add($"{table}.{column}");
+                    _sortingParametersAscending.Add($"{Util.FormatSQL(table, column)}");
                     break;
                 case SqlSortMode.DESCENDING:
-                    _sortingParametersDescending.Add($"{table}.{column}");
+                    _sortingParametersDescending.Add($"{Util.FormatSQL(table, column)}");
                     break;
                 case SqlSortMode.NONE:
-                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }

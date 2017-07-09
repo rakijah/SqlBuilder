@@ -4,11 +4,26 @@ namespace SqlBuilder
 {
     public static class SqlBuild
     {
+        public static bool Initialized { get; internal set; }
+
+        public static DatabaseProvider Provider { get; internal set; }
+        public static bool UseSquareBrackets { get; internal set; }
+
+        public static void Configure(DatabaseProvider provider, bool useSquareBrackets)
+        {
+            Provider = provider;
+            UseSquareBrackets = useSquareBrackets;
+            Initialized = true;
+        }
+
         /// <summary>
         /// Creates a new SELECT command.
         /// </summary>
         public static BuiltSelectCommand Select()
         {
+            if (!Initialized)
+                throw new Exception("Configure() must be called before building commands.");
+
             return new BuiltSelectCommand();
         }
 
@@ -17,6 +32,9 @@ namespace SqlBuilder
         /// </summary>
         public static BuiltInsertCommand Insert()
         {
+            if (!Initialized)
+                throw new Exception("Configure() must be called before building commands.");
+
             return new BuiltInsertCommand();
         }
 
@@ -25,31 +43,18 @@ namespace SqlBuilder
         /// </summary>
         public static BuiltDeleteCommand Delete()
         {
+            if (!Initialized)
+                throw new Exception("Configure() must be called before building commands.");
+
             return new BuiltDeleteCommand();
         }
 
-        /// <summary>
-        /// Converts a DateTime object to a string using the specified provider's format.
-        /// </summary>
-        /// <param name="dateTime">The DateTime object to be parsed.</param>
-        /// <param name="format">The provider whose format is to be used.</param>
-        public static string DateToString(DateTime dateTime, SqlDateFormat format)
+        public static BuiltAlterTableCommand AlterTable(string table)
         {
-            switch(format)
-            {
-                case SqlDateFormat.Oracle:
-                    return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
-                case SqlDateFormat.SqlServer:
-                    return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(format), format, null);
-            }
-        }
-    }
+            if (!Initialized)
+                throw new Exception("Configure() must be called before building commands.");
 
-    public enum SqlDateFormat
-    {
-        Oracle,
-        SqlServer
+            return new BuiltAlterTableCommand(table);
+        }
     }
 }
