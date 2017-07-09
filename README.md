@@ -45,8 +45,8 @@ The `BuiltDeleteCommand` exposes the following methods:
 
 ## Alter table command
 The `BuiltAlterTableCommand` exposes the following methods:
-`RenameTable`: Rename the table.
-`Add`: Add a column to the table.
-`Drop`: Drop (delete) a column from the table.
-`AddPrimaryKey`: Add a primary key to the table.
-`ChangeColumnType`: Changes the type of a column.
+* `RenameTable`: Rename the table.
+* `Add`: Add a column to the table.
+* `Drop`: Drop (delete) a column from the table.
+* `AddPrimaryKey`: Add a primary key to the table.
+* `ChangeColumnType`: Changes the type of a column.
