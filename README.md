@@ -16,14 +16,14 @@ The `BuiltSelectCommand` exposes the following methods:
 * `ToString`/`Generate`: Generates the actual SQL command string
 
 After calling `Where` you are dealing with a `BuiltSqlCondition` object, which exposes the following methods:  
-`AddCondition`: Adds a comparison to the WHERE clause. The operator to perform the comparison can be passed as a string. It's also possible to compare to a static value and enclose this value in a given character (for example `'value'`).  
-`BeginBlock`/`EndBlock`: Begins or ends a block by adding a `(` or `)`, respectively. BuiltSqlCondition also keeps track of wether or not you're currently within a block and throws an exception if you try to create an SQL command from a condition with unmatched block parenthesis.  
-`And`/`Or`: Adds an `OR` or `AND` logical expression to the condition. This throws an exception if you try to add logical expressions in invalid places (for example `AND AND` can never be valid)  
-`Finish`: Ends the condition creation and returns the parent BuiltSelectCommand to allow for contiuous chaining.  
+* `AddCondition`: Adds a comparison to the WHERE clause. The operator to perform the comparison can be passed as a string. It's also possible to compare to a static value and enclose this value in a given character (for example `'value'`).  
+* `BeginBlock`/`EndBlock`: Begins or ends a block by adding a `(` or `)`, respectively. BuiltSqlCondition also keeps track of wether or not you're currently within a block and throws an exception if you try to create an SQL command from a condition with unmatched block parenthesis.  
+* `And`/`Or`: Adds an `OR` or `AND` logical expression to the condition. This throws an exception if you try to add logical expressions in invalid places (for example `AND AND` can never be valid)  
+* `Finish`: Ends the condition creation and returns the parent BuiltSelectCommand to allow for contiuous chaining.  
 
 After calling `OrderBy` you are dealing with a `BuiltSqlSort` object, which exposes the following methods:  
-`SortBy`: Adds a column to be sorted and allows you to select which sort mode you want to use (ascending/descending). Currently doesn't order columns correctly.  
-`Finish`: Ends the sort creation and returns the parent BuiltSelectCommand to allow for contiuous chaining.  
+* `SortBy`: Adds a column to be sorted and allows you to select which sort mode you want to use (ascending/descending). Currently doesn't order columns correctly.  
+* `Finish`: Ends the sort creation and returns the parent BuiltSelectCommand to allow for contiuous chaining.  
 
 ## Insert command
 The `BuiltInsertCommand` exposes the following methods:
