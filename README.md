@@ -5,6 +5,8 @@ This library provides a quick and easy way to build an SQL command string throug
 First, call `SqlBuild.Configure()` to initialize the builder. Here you can specify your database provider, as well as whether or not table/column names should be wrapped in square brackets (i.e. *[table].[column]*).
 The `SqlBuild` class then offers static methods to start building commands: `.Select()`, `.Insert()`, `.Delete()`, `AlterTable()`. From there you can chain methods until you're done with your entire SQL command.
 
+See [the test project](SqlBuilderTest/Program.cs) for example usage.
+
 ## Select command
 The `BuiltSelectCommand` exposes the following methods:
 
