@@ -2,7 +2,31 @@
 This library provides a quick and easy way to build an SQL command string through command-chaining. It's still in early development and currently only supports the `SELECT`, `INSERT`,`DELETE` and basic `ALTER TABLE` commands. Sorting also needs to be redone, as there is currently no way to really specify sorting priority for multiple sorting columns.  
 
 # Usage  
-First, call `SqlBuild.Configure()` to initialize the builder. Here you can specify your database provider, as well as whether or not table/column names should be wrapped in square brackets (i.e. *[table].[column]*).
+First, create classes that will represent the tables using the custom attributes `SqlTableName` and `SqlColumnName`, like so:
+```
+[SqlTableName("users")]
+    public class Users : SqlTable
+    {
+        [SqlColumnName("username")]
+        public string Username { get; set; }
+
+        [SqlColumnName("password")]
+        public string Password { get; set; }
+
+        [SqlColumnName("email")]
+        public string Email { get; set; }
+
+        [SqlColumnName("id")]
+        public string Id { get; set; }
+
+        [SqlColumnName("lastname")]
+        public string LastName { get; set; }
+
+        [SqlColumnName("firstname")]
+        public string FirstName { get; set; }
+    }
+```
+Then, call `SqlBuild.Configure()` to initialize the builder. Here you can specify your database provider, as well as whether or not table/column names should be wrapped in square brackets (i.e. *[table].[column]*).
 The `SqlBuild` class then offers static methods to start building commands: `.Select()`, `.Insert()`, `.Delete()`, `AlterTable()`. From there you can chain methods until you're done with your entire SQL command.
 
 See [the test project](SqlBuilderTest/Program.cs) for example usage.
@@ -11,6 +35,7 @@ See [the test project](SqlBuilderTest/Program.cs) for example usage.
 The `BuiltSelectCommand` exposes the following methods:
 
 * `AddColumns`: Add one or more columns to the selection (SELECT columns FROM...)
+* `AddColumnDirect`: !!UNSAFE!! Add a column by directly specifying a string. This can be used to transform columns before selecting them (like "TO_CHAR(BIRTHDATE, 'yyyy-MM-dd hh:mm:ss'" etc.)
 * `AddTable`: Add a table to select from (FROM table)
 * `Join`: Add a JOIN to the SQL command
 * `Where`: Begins creation of the WHERE clause
@@ -19,6 +44,7 @@ The `BuiltSelectCommand` exposes the following methods:
 
 After calling `Where` you are dealing with a `BuiltSqlCondition` object, which exposes the following methods:  
 * `AddCondition`: Adds a comparison to the WHERE clause. The operator to perform the comparison can be passed as a string. It's also possible to compare to a static value and enclose this value in a given character (for example `'value'`).  
+* `AddConditionDirect`: !!UNSAFE!! Add a condition by directly specifying a string.
 * `BeginBlock`/`EndBlock`: Begins or ends a block by adding a `(` or `)`, respectively. BuiltSqlCondition also keeps track of wether or not you're currently within a block and throws an exception if you try to create an SQL command from a condition with unmatched block parenthesis.  
 * `And`/`Or`: Adds an `OR` or `AND` logical expression to the condition. This throws an exception if you try to add logical expressions in invalid places (for example `AND AND` can never be valid)  
 * `Finish`: Ends the condition creation and returns the parent BuiltSelectCommand to allow for contiuous chaining.  

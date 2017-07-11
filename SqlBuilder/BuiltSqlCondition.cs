@@ -63,7 +63,7 @@ namespace SqlBuilder
         /// This is automatically considered to be a non-logic expression.
         /// </summary>
         /// <param name="condition">The condition to be added (example: SubStr(column, 4)="test"</param>
-        public BuiltSqlCondition<T> AddDirectCondition(string condition)
+        public BuiltSqlCondition<T> AddConditionDirect(string condition)
         {
             _lastComponentWasLogicExpression = false;
             _conditionExpressions.Add(condition.Trim());
