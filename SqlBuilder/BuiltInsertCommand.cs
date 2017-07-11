@@ -19,12 +19,23 @@ namespace SqlBuilder
         /// <summary>
         /// Specify the table to insert into and its column names.
         /// </summary>
-        /// <param name="table">The table to insert into.</param>
+        /// <typeparam name="T">The table to insert into.</typeparam>
         /// <param name="columns">The names of the columns you wish to specify values for.</param>
-        public BuiltInsertCommand Into(string table, params string[] columns)
+        public BuiltInsertCommand Into<T>(params string[] columns)
         {
-            _table = table;
+            _table = SqlTable.GetTableName<T>();
             _columns = new List<string>(columns);
+            return this;
+        }
+
+        /// <summary>
+        /// Specify the table to insert into. Assumes you want to use all columns for this insert.
+        /// </summary>
+        /// <typeparam name="T">The table to insert into.</typeparam>
+        public BuiltInsertCommand Into<T>()
+        {
+            _table = SqlTable.GetTableName<T>();
+            _columns = SqlTable.GetColumnNames<T>();
             return this;
         }
 

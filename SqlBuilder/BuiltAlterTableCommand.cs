@@ -4,14 +4,18 @@ using System.Text;
 
 namespace SqlBuilder
 {
-    public class BuiltAlterTableCommand
+    /// <summary>
+    /// An ALTER TABLE command.
+    /// </summary>
+    /// <typeparam name="T">The table to be altered.</typeparam>
+    public class BuiltAlterTableCommand<T>
     {
         private string _table;
         private List<string> _components;
 
-        internal BuiltAlterTableCommand(string table)
+        internal BuiltAlterTableCommand()
         {
-            _table = table;
+            _table = SqlTable.GetTableName<T>();
             _components = new List<string>();
         }
 
@@ -19,7 +23,7 @@ namespace SqlBuilder
         /// Renames the table.
         /// </summary>
         /// <param name="to">The new name of the table.</param>
-        public BuiltAlterTableCommand RenameTable(string to)
+        public BuiltAlterTableCommand<T> RenameTable(string to)
         {
             _components.Add($"RENAME {Util.FormatSQL(to)}");
             return this;
@@ -30,7 +34,7 @@ namespace SqlBuilder
         /// Deletes one or more columns.
         /// </summary>
         /// <param name="columns">The columns to be dropped.</param>
-        public BuiltAlterTableCommand Drop(params string[] columns)
+        public BuiltAlterTableCommand<T> Drop(params string[] columns)
         {
             for (int i = 0; i < columns.Length; i++)
             {
@@ -46,7 +50,7 @@ namespace SqlBuilder
         /// <param name="type">The type of the column. For example "INT UNSIGNED".</param>
         /// <param name="nullable">Whether the column should allow NULL as a valid value.</param>
         /// <param name="autoIncrement">Whether the column should be auto incrementing.</param>
-        public BuiltAlterTableCommand Add(string column, string type, bool nullable = true, bool autoIncrement = false)
+        public BuiltAlterTableCommand<T> Add(string column, string type, bool nullable = true, bool autoIncrement = false)
         {
             string result = $"ADD {Util.FormatSQL(column)} {type.ToUpper()}";
             if (!nullable)
@@ -63,7 +67,7 @@ namespace SqlBuilder
         /// Adds a primary key.
         /// </summary>
         /// <param name="column">The column to be made a primary key.</param>
-        public BuiltAlterTableCommand AddPrimaryKey(string column)
+        public BuiltAlterTableCommand<T> AddPrimaryKey(string column)
         {
             _components.Add($"ADD PRIMARY KEY ({Util.FormatSQL(column)})");
             return this;
@@ -74,7 +78,7 @@ namespace SqlBuilder
         /// </summary>
         /// <param name="column">The column to be altered.</param>
         /// <param name="newType">The new type of the column.</param>
-        public BuiltAlterTableCommand ChangeColumnType(string column, string newType)
+        public BuiltAlterTableCommand<T> ChangeColumnType(string column, string newType)
         {
             string colAndType = $"{Util.FormatSQL(column)} {newType}";
 

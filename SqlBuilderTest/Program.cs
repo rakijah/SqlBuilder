@@ -1,5 +1,6 @@
 ﻿using System;
 using SqlBuilder;
+using System.IO;
 
 namespace SqlBuilderTest
 {
@@ -7,31 +8,28 @@ namespace SqlBuilderTest
     {
         private static void Main(string[] args)
         {
-            SqlBuild.Configure(DatabaseProvider.OracleBefore10G, false);
-
-            string tableUsers = "users";
-            string tableAddresses = "adresses";
-            var selectSql = SqlBuild.Select()
-                                         .AddColumns(tableUsers, "username", "email")
-                                         .AddTable(tableUsers)
-                                         .Join(tableUsers, "id", tableAddresses, "userid")
-                                         .AddColumns(tableUsers, "postcode", "street")
+            SqlBuild.Configure(DatabaseProvider.OracleBefore10G, true);
+            
+            var selectSql = SqlBuild.Select<Users>(false)
+                                         .AddColumns<Users>("username", "email")
+                                         .Join<Addresses, Users>("userid", "id")
+                                         .AddColumns<Addresses>("postcode", "street")
                                          .Where()
                                             .BeginBlock()
-                                            .AddCondition(tableUsers, "lastname", "Jones", "=", '"')
+                                            .AddCondition<Users>("lastname", "=", "Jones", '"')
                                             .And()
-                                            .AddCondition(tableAddresses, "state", "Ohio", "=", '"')
+                                            .AddCondition<Addresses>("state", "=", "Ohio", '"')
                                             .EndBlock()
                                             .Or()
-                                            .AddCondition(tableUsers, "id", "50", ">", '"')
+                                            .AddCondition<Users>("id", ">", "50", '"')
                                             .Finish()
                                          .OrderBy()
-                                            .SortBy(tableUsers, "firstname", SqlSortMode.DESCENDING)
+                                            .SortBy<Users>("firstname", SqlSortMode.DESCENDING)
                                             .Finish();
             Console.WriteLine(selectSql + Environment.NewLine);
 
             var insertSql = SqlBuild.Insert()
-                                        .Into(tableUsers, "username", "password", "email")
+                                        .Into<Users>("username", "password", "email")
                                         .AddValues()
                                             .AddValueFor("username", "rakijah", '"')
                                             .AddValueFor("password", "dGhlIGdhbWU=", '"')
@@ -42,17 +40,18 @@ namespace SqlBuilderTest
             Console.WriteLine(insertSql + Environment.NewLine);
 
             var deleteSql = SqlBuild.Delete()
-                                        .From(tableUsers)
+                                        .From<Users>()
                                         .Where()
-                                            .AddCondition(tableUsers, "id", "10", "<")
+                                            .AddCondition<Users>("id", "<", "10")
                                             .Finish();
             Console.WriteLine(deleteSql + Environment.NewLine);
 
-            var alterTableSql = SqlBuild.AlterTable("user")
+            var alterTableSql = SqlBuild.AlterTable<Users>()
                                                     .Add("firstname", "varchar(50)", true)
                                                     .Add("lastname", "varchar(50)", true)
                                                     .Drop("fullname")
                                                     .ChangeColumnType("username", "VARCHAR(255)");
+            
             Console.WriteLine(alterTableSql + Environment.NewLine);
             Console.ReadLine();
         }

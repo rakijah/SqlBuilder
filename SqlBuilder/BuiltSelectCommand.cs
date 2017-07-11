@@ -1,6 +1,8 @@
-﻿using System;
+﻿using SqlBuilder.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace SqlBuilder
@@ -13,31 +15,40 @@ namespace SqlBuilder
         private BuiltSqlSort _sort;
         private BuiltSqlCondition<BuiltSelectCommand> _condition;
         
-
         internal BuiltSelectCommand()
         {
             _fromTables = new List<string>();
             _selectedColumns = new List<string>();
             _joins = new List<SqlJoin>();
         }
-        
+
         /// <summary>
         /// Adds a table to used in the FROM clause.
         /// </summary>
-        /// <param name="table">The table to be added.</param>
-        public BuiltSelectCommand AddTable(string table)
+        /// <typeparam name="T">The table to be added.</typeparam>
+        /// <param name="selectAllColumns">Whether all columns from this table should be added to the selection.</param>
+        public BuiltSelectCommand AddTable<T>(bool selectAllColumns = true)
         {
-            _fromTables.Add(table);
+            string tableName = SqlTable.GetTableName<T>();
+            _fromTables.Add(tableName);
+
+            if (selectAllColumns)
+                AddColumns<T>(SqlTable.GetColumnNames<T>().ToArray());
+
             return this;
         }
-        
+
         /// <summary>
         /// Add columns to be selected.
         /// </summary>
-        /// <param name="tableName">The table containing the columns.</param>
+        /// <typeparam name="T">The table containing the columns.</typeparam>
         /// <param name="columns">The columns to be selected.</param>
-        public BuiltSelectCommand AddColumns(string tableName, params string[] columns)
+        public BuiltSelectCommand AddColumns<T>(params string[] columns)
         {
+            string tableName = SqlTable.GetTableName<T>();
+            if (!SqlTable.ContainsAllColumns<T>(columns))
+                throw new Exception($"Table \"{SqlTable.GetTableName<T>()}\" does not contain all columns specified.");
+
             foreach (string column in columns)
             {
                 string fullyQualified = $"{Util.FormatSQL(tableName, column)}";
@@ -48,20 +59,53 @@ namespace SqlBuilder
         }
 
         /// <summary>
+        /// Add all columns from the specified table to be selected.
+        /// </summary>
+        /// <typeparam name="T">The table containing the columns.</typeparam>
+        public BuiltSelectCommand AddColumns<T>()
+        {
+            foreach (string column in SqlTable.GetColumnNames<T>())
+            {
+                string fullyQualified = $"{Util.FormatSQL(SqlTable.GetTableName<T>(), column)}";
+                if (!_selectedColumns.Contains(fullyQualified))
+                    _selectedColumns.Add(fullyQualified);
+            }
+            return this;
+        }
+
+        /// <summary>
+        /// !! UNSAFE !! Adds a directly specified string as a column. Use this to apply functions to columns before selecting.
+        /// </summary>
+        /// <param name="column">The column string to be added to the selection.</param>
+        public BuiltSelectCommand AddColumnDirect(string column)
+        {
+            if (!_selectedColumns.Contains(column))
+            {
+                _selectedColumns.Add(column);
+            }
+            return this;
+        }
+
+        /// <summary>
         /// Adds a JOIN to this BuiltSelectCommand.
         /// </summary>
-        /// <param name="existingTable">The existing table of the join.</param>
-        /// <param name="existingColumn">The column to use from the existing table.</param>
-        /// <param name="newTable">The new table of this join.</param>
-        /// <param name="newColumn">The column to use from the new table.</param>
-        public BuiltSelectCommand Join(string existingTable, string existingColumn, string newTable, string newColumn)
+        /// <typeparam name="ToJoin">The new table of this join.</typeparam>
+        /// <typeparam name="On">The existing table to be used for comparison.</typeparam>
+        /// <param name="toJoinColumn">The column to use from the new table.</param>
+        /// <param name="onColumn">The column to use from the existing table.</param>
+        public BuiltSelectCommand Join<ToJoin, On>(string toJoinColumn, string onColumn)
         {
+            if (!SqlTable.ContainsColumn<ToJoin>(toJoinColumn) ||
+               !SqlTable.ContainsColumn<On>(onColumn))
+                throw new Exception("The specified tables do not contain the specified columns.");
+
+
             _joins.Add(new SqlJoin
             {
-                FirstTable = existingTable,
-                SecondTable = newTable,
-                FirstColumn = existingColumn,
-                SecondColumn = newColumn
+                FirstTable = SqlTable.GetTableName<On>(),
+                SecondTable = SqlTable.GetTableName<ToJoin>(),
+                FirstColumn = onColumn,
+                SecondColumn = toJoinColumn
             });
             return this;
         }

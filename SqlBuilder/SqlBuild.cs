@@ -27,6 +27,17 @@ namespace SqlBuilder
             return new BuiltSelectCommand();
         }
 
+        //* //
+        public static BuiltSelectCommand Select<T>(bool selectAllColumns = true)
+        {
+            if(!Initialized)
+                throw new Exception("Configure() must be called before building commands.");
+            var bsc = new BuiltSelectCommand(); ;
+            bsc.AddTable<T>(selectAllColumns);
+            return bsc;
+        }
+        // */
+
         /// <summary>
         /// Creates a new INSERT command.
         /// </summary>
@@ -39,22 +50,33 @@ namespace SqlBuilder
         }
 
         /// <summary>
+        /// Creates a new INSERT command to insert into the specified table.
+        /// </summary>
+        public static BuiltInsertCommand Insert<Into>()
+        {
+            if (!Initialized)
+                throw new Exception("Configure() must be called before building commands.");
+            var bic = new BuiltInsertCommand();
+            bic.Into<Into>();
+            return bic;
+        }
+
+        /// <summary>
         /// Creates a new DELETE command.
         /// </summary>
         public static BuiltDeleteCommand Delete()
         {
             if (!Initialized)
                 throw new Exception("Configure() must be called before building commands.");
-
             return new BuiltDeleteCommand();
         }
 
-        public static BuiltAlterTableCommand AlterTable(string table)
+        public static BuiltAlterTableCommand<T> AlterTable<T>()
         {
             if (!Initialized)
                 throw new Exception("Configure() must be called before building commands.");
 
-            return new BuiltAlterTableCommand(table);
+            return new BuiltAlterTableCommand<T>();
         }
     }
 }

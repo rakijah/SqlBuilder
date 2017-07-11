@@ -25,10 +25,10 @@ namespace SqlBuilder
         /// <summary>
         /// Specify the table to delete from.
         /// </summary>
-        /// <param name="table">The name of the table you want to delete from.</param>
-        public BuiltDeleteCommand From(string table)
+        /// <typeparam name="T">The table you want to delete from.</typeparam>
+        public BuiltDeleteCommand From<T>()
         {
-            _table = table;
+            _table = SqlTable.GetTableName<T>();
             return this;
         }
 

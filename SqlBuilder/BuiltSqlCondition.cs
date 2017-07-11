@@ -20,35 +20,35 @@ namespace SqlBuilder
         /// <summary>
         /// Adds a condition to the WHERE clause that compares two columns.
         /// </summary>
-        /// <param name="firstTable">The lefthand table used for the comparison.</param>
+        /// <typeparam name="TFirst">The first (lefthand) table of the comparison.</typeparam>
+        /// <typeparam name="TSecond">The second (righthand) table of the comparison.</typeparam>
         /// <param name="firstColumn">The column of the lefthand table to be compared.</param>
-        /// <param name="secondTable">The righthhand table used for the comparison.</param>
-        /// <param name="secondColumn">The column of the righthand table to be compared.</param>
         /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '&lt;&gt;' '&gt;' etc.</param>
-        public BuiltSqlCondition<T> AddCondition(string firstTable, string firstColumn, string secondTable, string secondColumn, string comparisonOperator)
+        /// <param name="secondColumn">The column of the righthand table to be compared.</param>
+        public BuiltSqlCondition<T> AddCondition<TFirst, TSecond>(string firstColumn, string comparisonOperator, string secondColumn)
         {
             if (!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
 
-            _conditionExpressions.Add($"{Util.FormatSQL(firstTable, firstColumn)}{comparisonOperator}{Util.FormatSQL(secondTable, secondColumn)}");
+            _conditionExpressions.Add($"{Util.FormatSQL(SqlTable.GetTableName<TFirst>(), firstColumn)}{comparisonOperator}{Util.FormatSQL(SqlTable.GetTableName<TSecond>(), secondColumn)}");
             return this;
         }
 
         /// <summary>
         /// Adds an "equals" condition to the WHERE clause that compares a column to a static value.
         /// </summary>
-        /// <param name="table">The table to be used in the comparison.</param>
+        /// <typeparam name="Table">The table to be used in the comparison.</typeparam>
         /// <param name="column">The column to be compared.</param>
-        /// <param name="value">The value to be compared against.</param>
         /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '&lt;&gt;' '&gt;' etc.</param>
+        /// <param name="value">The value to be compared against.</param>
         /// <param name="putAroundValue">Optional character that encloses the value if != \0</param>
-        public BuiltSqlCondition<T> AddCondition(string table, string column, string value, string comparisonOperator, char putAroundValue = '\0')
+        public BuiltSqlCondition<T> AddCondition<Table>(string column, string comparisonOperator, string value, char putAroundValue = '\0')
         {
             if (!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
-            string condition = $"{Util.FormatSQL(table, column)}{comparisonOperator}";
+            string condition = $"{Util.FormatSQL(SqlTable.GetTableName<Table>(), column)}{comparisonOperator}";
             if (putAroundValue == '\0')
                 condition += value;
             else
@@ -59,16 +59,28 @@ namespace SqlBuilder
         }
 
         /// <summary>
+        /// !! UNSAFE !! Adds a directly specified condition to the clause.
+        /// This is automatically considered to be a non-logic expression.
+        /// </summary>
+        /// <param name="condition">The condition to be added (example: SubStr(column, 4)="test"</param>
+        public BuiltSqlCondition<T> AddDirectCondition(string condition)
+        {
+            _lastComponentWasLogicExpression = false;
+            _conditionExpressions.Add(condition.Trim());
+            return this;
+        }
+
+        /// <summary>
         /// Adds an IS NULL comparison to the WHERE clause.
         /// </summary>
-        /// <param name="table">The table to be used in the comparison.</param>
+        /// <typeparam name="Table">The table to be used in the comparison.</typeparam>
         /// <param name="column">The column to be compared.</param>
-        public BuiltSqlCondition<T> IsNull(string table, string column)
+        public BuiltSqlCondition<T> IsNull<Table>(string column)
         {
             if(!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
-            _conditionExpressions.Add($"{Util.FormatSQL(table, column)} IS NULL");
+            _conditionExpressions.Add($"{Util.FormatSQL(SqlTable.GetTableName<Table>(), column)} IS NULL");
             return this;
         }
 

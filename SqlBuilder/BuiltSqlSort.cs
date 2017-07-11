@@ -20,18 +20,18 @@ namespace SqlBuilder
         /// <summary>
         /// Add a column to be sorted.
         /// </summary>
-        /// <param name="table">The table that the column resides in.</param>
+        /// <typeparam name="T">The table that the column resides in.</typeparam>
         /// <param name="column">The column to be used for sorting.</param>
         /// <param name="mode">The sorting mode to be used for this column.</param>
-        public BuiltSqlSort SortBy(string table, string column, SqlSortMode mode)
+        public BuiltSqlSort SortBy<T>(string column, SqlSortMode mode)
         {
             switch(mode)
             {
                 case SqlSortMode.ASCENDING:
-                    _sortingParametersAscending.Add($"{Util.FormatSQL(table, column)}");
+                    _sortingParametersAscending.Add($"{Util.FormatSQL(SqlTable.GetTableName<T>(), column)}");
                     break;
                 case SqlSortMode.DESCENDING:
-                    _sortingParametersDescending.Add($"{Util.FormatSQL(table, column)}");
+                    _sortingParametersDescending.Add($"{Util.FormatSQL(SqlTable.GetTableName<T>(), column)}");
                     break;
                 case SqlSortMode.NONE:
                 default:
