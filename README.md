@@ -33,8 +33,8 @@ The `SqlBuild` class then offers static methods to start building commands:
 * `.Select()`
 * `.InsertInto()`
 * `.Delete()`
-* `AlterTable()`
-* `CreateTable()`
+* `.AlterTable()`
+* `.CreateTable()`
 
 From there you can chain methods until you're done with your entire SQL command.
 
