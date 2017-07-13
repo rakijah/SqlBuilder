@@ -12,7 +12,6 @@ namespace SqlBuilder
     {
         //Caching to reduce the performance impact of reflection.
         private static Dictionary<Type, string> _tableNames = new Dictionary<Type, string>();
-
         private static Dictionary<Type, List<string>> _tableColumns = new Dictionary<Type, List<string>>();
         private static Dictionary<Type, Map<PropertyInfo, string>> _tablePropertiesAndColumns = new Dictionary<Type, Map<PropertyInfo, string>>();
 
