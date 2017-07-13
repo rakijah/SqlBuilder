@@ -3,7 +3,7 @@ This library provides a quick and easy way to build an SQL command string throug
 
 # Usage  
 First, create classes that will represent the tables using the custom attributes `SqlTableName` and `SqlColumn`, like so:
-```
+```csharp
 [SqlTableName("users")]
 public class Users
 {
@@ -113,15 +113,15 @@ The `BuiltCreateCommand` exposes the following methods:
 # Attribute classes
 ### SqlTableName
 This attribute allows you to specify a table name on a table class, like so:
-````
+```csharp
 [SqlTableName("dbo.customers")]
 public class Customers
 {
 ...
-````
+```
 ### SqlColumn
 This attribute allows you to specify the name and type of a column on a property of a table class, like so:
-````
+```csharp
 [SqlTableName("dbo.customers")]
 public class Customers
 {
@@ -134,5 +134,5 @@ public class Customers
     [SqlColumn("birth_date", SqlColumnType.Date)]
     public DateTime BirthDate { get; set; }
 }
-````
+```
 Currently, only `Integer`, `String` and `Date` are supported. Date also has conversion problems due to different providers sometimes using completely different approaches to storing dates (for example SQLite doesn't store dates at all and simply uses TEXT/VARCHAR columns instead).
