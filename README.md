@@ -50,7 +50,7 @@ Provides methods to fetch table class instances ("entities") directly from a dat
 * `Single`: Get one entity from the database.
 * `Fetch`: Get the specified amount of entities (or less, if not available) from the database.
 
-This currently doesn't suppoert foreign keys / sub entities, but this is planned to be implemented in the future.
+This currently doesn't support foreign keys / sub entities, but this is planned to be implemented in the future.
 # Command classes
 
 ### Select command
