@@ -73,10 +73,5 @@ namespace SqlBuilderTest
             Console.ReadLine();
             //*/
         }
-
-        private static string SurroundWith(string str, char surroundWith)
-        {
-            return $"{surroundWith}{str}{surroundWith}";
-        }
     }
 }
