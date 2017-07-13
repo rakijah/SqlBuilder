@@ -1,14 +1,11 @@
-﻿using SqlBuilder.Attributes;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 
 namespace SqlBuilder
 {
     internal static class Util
     {
-
         /// <summary>
         /// Combines all entries in the list by putting inBetween between each entry.
         /// Example:
@@ -28,6 +25,10 @@ namespace SqlBuilder
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Formats the provided column name according to SqlBuilder.UseSquareBrackets.
+        /// </summary>
+        /// <param name="column">The column name to be formatted.</param>
         public static string FormatSQL(string column)
         {
             if (!SqlBuild.Initialized)
@@ -39,6 +40,11 @@ namespace SqlBuilder
                 return column;
         }
 
+        /// <summary>
+        /// Formats the provided table and column name according to SqlBuilder.UseSquareBrackets.
+        /// </summary>
+        /// <param name="table">The table name to be formatted.</param>
+        /// <param name="column">The column name to be formatted.</param>
         public static string FormatSQL(string table, string column)
         {
             if (!SqlBuild.Initialized)
@@ -46,24 +52,5 @@ namespace SqlBuilder
 
             return $"{FormatSQL(table)}.{FormatSQL(column)}";
         }
-
-        /*
-        /// <summary>
-        /// Converts a DateTime object to a string using the specified provider's format.
-        /// </summary>
-        /// <param name="dateTime">The DateTime object to be parsed.</param>
-        /// <param name="format">The provider whose format is to be used.</param>
-        public static string DateToString(DateTime dateTime, DatabaseProvider format)
-        {
-            switch (format)
-            {
-                case DatabaseProvider.Oracle:
-                    return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
-                case DatabaseProvider.SqlServer:
-                    return dateTime.ToString("yyyy-MM-dd HH:mm:ss");
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(format), format, null);
-            }
-        }*/
     }
 }

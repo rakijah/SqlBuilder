@@ -1,21 +1,24 @@
-﻿using System;
+﻿using SqlBuilder.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace SqlBuilder
 {
-    public class BuiltInsertValue
+    public class BuiltInsertValue<T>
     {
         private List<string> _columns;
         private Dictionary<string, string> _values;
-        private BuiltInsertCommand _parent;
+        private BuiltInsertCommand<T> _parent;
+        private List<SqlColumn> _attributes;
 
-        internal BuiltInsertValue(BuiltInsertCommand parent, List<string> columns)
+        internal BuiltInsertValue(BuiltInsertCommand<T> parent, List<string> columns)
         {
             _parent = parent;
             _columns = new List<string>(columns);
             _values = new Dictionary<string, string>();
+            _attributes = SqlTable.GetColumnAttributes<T>();
         }
 
         /// <summary>
@@ -24,23 +27,29 @@ namespace SqlBuilder
         /// <param name="column">The column that is going to hold the value.</param>
         /// <param name="value">The value to be inserted.</param>
         /// <param name="putAroundValue"></param>
-        public BuiltInsertValue AddValueFor(string column, string value, char putAroundValue = '\0')
+        public BuiltInsertValue<T> AddValueFor(string column, string value)
         {
             if (!_columns.Contains(column))
                 throw new Exception($"This BuiltInsertValue does not contain a column named \"{column}\"");
 
-            if (putAroundValue != '\0')
-                value = $"{putAroundValue}{value}{putAroundValue}";
+            if (!_attributes.Any(x => x.ColumnName == column))
+                throw new Exception($"Table \"{typeof(T).FullName}\" does not contain a column named \"{column}\"");
+
+            var attr = _attributes.Single(x => x.ColumnName == column);
+            string formattedValue = attr.FormatValueFor(value);
 
             if (_values.ContainsKey(column))
-                _values[column] = value;
+                _values[column] = formattedValue;
             else
-                _values.Add(column, value);
+                _values.Add(column, formattedValue);
 
             return this;
         }
 
-        public BuiltInsertCommand Finish()
+        /// <summary>
+        /// Returns the parent BuiltInsertCommand to allow for continuous chaining.
+        /// </summary>
+        public BuiltInsertCommand<T> Finish()
         {
             return _parent;
         }
@@ -51,7 +60,7 @@ namespace SqlBuilder
         public string Generate()
         {
             if (!_columns.All(c => _values.ContainsKey(c)))
-                throw new Exception("Please use AddValueFor to set a value for each column before calling ToString.");
+                throw new Exception("Please use AddValueFor to set a value for each column before generating the SQL command string.");
 
             StringBuilder sb = new StringBuilder("(");
             for (int i = 0; i < _columns.Count; i++)
@@ -69,6 +78,5 @@ namespace SqlBuilder
         {
             return Generate();
         }
-
     }
 }

@@ -1,8 +1,6 @@
-﻿using SqlBuilder.Attributes;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 namespace SqlBuilder
@@ -13,8 +11,9 @@ namespace SqlBuilder
         private List<string> _selectedColumns;
         private List<SqlJoin> _joins;
         private BuiltSqlSort _sort;
-        private BuiltSqlCondition<BuiltSelectCommand> _condition;
-        
+        public BuiltSqlCondition Condition { get; set; }
+        private string _limit = "";
+
         internal BuiltSelectCommand()
         {
             _fromTables = new List<string>();
@@ -52,7 +51,7 @@ namespace SqlBuilder
             foreach (string column in columns)
             {
                 string fullyQualified = $"{Util.FormatSQL(tableName, column)}";
-                if(!_selectedColumns.Contains(fullyQualified))
+                if (!_selectedColumns.Contains(fullyQualified))
                     _selectedColumns.Add(fullyQualified);
             }
             return this;
@@ -99,7 +98,6 @@ namespace SqlBuilder
                !SqlTable.ContainsColumn<On>(onColumn))
                 throw new Exception("The specified tables do not contain the specified columns.");
 
-
             _joins.Add(new SqlJoin
             {
                 FirstTable = SqlTable.GetTableName<On>(),
@@ -111,13 +109,13 @@ namespace SqlBuilder
         }
 
         /// <summary>
-        /// Creates a WHERE clause for this BuiltSqlCommand. 
+        /// Creates a WHERE clause for this BuiltSqlCommand.
         /// Calling this twice on a BuiltSelectCommand will overwrite the first call.
         /// </summary>
-        public BuiltSqlCondition<BuiltSelectCommand> Where()
+        public BuiltSelectCommand Where(BuiltSqlCondition condition)
         {
-            _condition = new BuiltSqlCondition<BuiltSelectCommand>(this);
-            return _condition;
+            Condition = condition;
+            return this;
         }
 
         /// <summary>
@@ -128,6 +126,18 @@ namespace SqlBuilder
         {
             _sort = new BuiltSqlSort(this);
             return _sort;
+        }
+
+        /// <summary>
+        /// Adds a LIMIT clause to this SELECT command.
+        /// </summary>
+        /// <param name="amountOfRows">The amount of rows to limit the select to (inclusive).</param>
+        public BuiltSelectCommand Limit(int amountOfRows)
+        {
+            if (amountOfRows > 0)
+                _limit = $"LIMIT {amountOfRows}";
+
+            return this;
         }
 
         /// <summary>
@@ -143,10 +153,9 @@ namespace SqlBuilder
 
             sb.Append($" FROM {_fromTables.Select(t => Util.FormatSQL(t)).ToList().Zip(", ")}");
 
-
-            if (_condition != null)
+            if (Condition != null)
             {
-                sb.Append($" {_condition}");
+                sb.Append($" {Condition}");
             }
             if (_joins.Count > 0)
             {
@@ -156,6 +165,11 @@ namespace SqlBuilder
             if (_sort != null)
             {
                 sb.Append($" {_sort}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(_limit))
+            {
+                sb.Append($" {_limit}");
             }
             return sb.ToString();
         }

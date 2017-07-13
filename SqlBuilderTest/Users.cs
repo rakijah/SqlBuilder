@@ -9,24 +9,24 @@ using SqlBuilder;
 namespace SqlBuilderTest
 {
     [SqlTableName("users")]
-    public class Users : SqlTable
+    public class Users
     {
-        [SqlColumnName("username")]
-        public string Username { get; set; }
-
-        [SqlColumnName("password")]
-        public string Password { get; set; }
-
-        [SqlColumnName("email")]
-        public string Email { get; set; }
-
-        [SqlColumnName("id")]
+        [SqlColumn("id", SqlColumnType.Integer)]
         public string Id { get; set; }
 
-        [SqlColumnName("lastname")]
+        [SqlColumn("username", SqlColumnType.String)]
+        public string Username { get; set; }
+
+        [SqlColumn("password", SqlColumnType.String)]
+        public string Password { get; set; }
+
+        [SqlColumn("email", SqlColumnType.String)]
+        public string Email { get; set; }
+        
+        [SqlColumn("lastname", SqlColumnType.String)]
         public string LastName { get; set; }
 
-        [SqlColumnName("firstname")]
+        [SqlColumn("firstname", SqlColumnType.String)]
         public string FirstName { get; set; }
     }
 }

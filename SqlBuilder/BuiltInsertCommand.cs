@@ -5,60 +5,49 @@ using System.Text;
 
 namespace SqlBuilder
 {
-    public class BuiltInsertCommand
+    /// <summary>
+    /// Generates an INSERT INTO command.
+    /// </summary>
+    /// <typeparam name="T">The table to insert into.</typeparam>
+    public class BuiltInsertCommand<T>
     {
         private string _table;
         private List<string> _columns;
-        private List<BuiltInsertValue> _rowValues;
+        private List<BuiltInsertValue<T>> _rowValues;
 
         internal BuiltInsertCommand()
         {
-            _rowValues = new List<BuiltInsertValue>();
-        }
-
-        /// <summary>
-        /// Specify the table to insert into and its column names.
-        /// </summary>
-        /// <typeparam name="T">The table to insert into.</typeparam>
-        /// <param name="columns">The names of the columns you wish to specify values for.</param>
-        public BuiltInsertCommand Into<T>(params string[] columns)
-        {
-            _table = SqlTable.GetTableName<T>();
-            _columns = new List<string>(columns);
-            return this;
-        }
-
-        /// <summary>
-        /// Specify the table to insert into. Assumes you want to use all columns for this insert.
-        /// </summary>
-        /// <typeparam name="T">The table to insert into.</typeparam>
-        public BuiltInsertCommand Into<T>()
-        {
+            _rowValues = new List<BuiltInsertValue<T>>();
             _table = SqlTable.GetTableName<T>();
             _columns = SqlTable.GetColumnNames<T>();
-            return this;
+        }
+
+        internal BuiltInsertCommand(params string[] columns)
+        {
+            _rowValues = new List<BuiltInsertValue<T>>();
+            _table = SqlTable.GetTableName<T>();
+            _columns = new List<string>(columns);
         }
 
         /// <summary>
         /// Add a row of values to this INSERT command.
-        /// Must be called after Into().
         /// </summary>
-        public BuiltInsertValue AddValues()
+        public BuiltInsertValue<T> AddValues()
         {
             if (_columns == null)
                 throw new Exception("Use Into to initialise the table and columns before calling this function.");
 
-            var newRow = new BuiltInsertValue(this, _columns);
+            var newRow = new BuiltInsertValue<T>(this, _columns);
             _rowValues.Add(newRow);
             return newRow;
         }
-        
+
         /// <summary>
         /// Adds a row to this INSERT command by providing values for every column (in the correct order).
         /// This function does not allow you to surround the values with a specific character, though.
         /// </summary>
         /// <param name="orderedValues">The values to be inserted.</param>
-        public BuiltInsertCommand AddRow(params string[] orderedValues)
+        public BuiltInsertCommand<T> AddRow(params string[] orderedValues)
         {
             if (_columns == null)
                 throw new Exception("Use Into to initialise the table and columns before calling this function.");
@@ -66,8 +55,7 @@ namespace SqlBuilder
             if (orderedValues.Length != _columns.Count)
                 throw new Exception("Column count does not match amount of specified values.");
 
-
-            var row = new BuiltInsertValue(this, _columns);
+            var row = new BuiltInsertValue<T>(this, _columns);
             for (int i = 0; i < orderedValues.Length; i++)
             {
                 row.AddValueFor(_columns[i], orderedValues[i]);
@@ -96,8 +84,7 @@ namespace SqlBuilder
             sb.Append(") VALUES ");
             for (int i = 0; i < _rowValues.Count; i++)
             {
-                var row = _rowValues[i];
-                sb.Append(row.Generate());
+                sb.Append(_rowValues[i].Generate());
                 if (i != _rowValues.Count - 1)
                     sb.Append(", ");
             }

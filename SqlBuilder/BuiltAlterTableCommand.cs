@@ -29,7 +29,6 @@ namespace SqlBuilder
             return this;
         }
 
-
         /// <summary>
         /// Deletes one or more columns.
         /// </summary>
@@ -82,20 +81,25 @@ namespace SqlBuilder
         {
             string colAndType = $"{Util.FormatSQL(column)} {newType}";
 
-            switch(SqlBuild.Provider)
+            switch (SqlBuild.Provider)
             {
                 case DatabaseProvider.SqlServer:
                 case DatabaseProvider.MSAccess:
                     _components.Add($"ALTER COLUMN {colAndType}");
                     break;
+
                 case DatabaseProvider.MySql:
                 case DatabaseProvider.OracleBefore10G:
                     _components.Add($"MODIFY COLUMN {colAndType}");
                     break;
+
                 case DatabaseProvider.Oracle10GOrLater:
                     _components.Add($"MODIFY {colAndType}");
                     break;
-                case DatabaseProvider.Unknown:
+
+                case DatabaseProvider.SQLite:
+                    throw new Exception("SQLite does not support altering columns.");
+                default:
                     throw new Exception("SqlBuild.Provider needs to be set before calling this function.");
             }
             return this;

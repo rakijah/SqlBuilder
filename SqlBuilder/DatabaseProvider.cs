@@ -7,6 +7,7 @@
         OracleBefore10G,
         MySql,
         MSAccess,
-        SqlServer
+        SqlServer,
+        SQLite
     }
 }

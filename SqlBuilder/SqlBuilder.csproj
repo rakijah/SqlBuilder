@@ -40,9 +40,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\SqlColumnName.cs" />
+    <Compile Include="Attributes\SqlColumn.cs" />
+    <Compile Include="Attributes\SqlColumnType.cs" />
     <Compile Include="Attributes\SqlTableName.cs" />
     <Compile Include="BuiltAlterTableCommand.cs" />
+    <Compile Include="BuiltCreateCommand.cs" />
     <Compile Include="BuiltDeleteCommand.cs" />
     <Compile Include="BuiltInsertCommand.cs" />
     <Compile Include="BuiltInsertValue.cs" />
@@ -50,6 +52,9 @@
     <Compile Include="BuiltSqlCondition.cs" />
     <Compile Include="BuiltSqlSort.cs" />
     <Compile Include="DatabaseProvider.cs" />
+    <Compile Include="EntityFetcher.cs" />
+    <Compile Include="Map.cs" />
+    <Compile Include="ProviderSpecific.cs" />
     <Compile Include="SqlBuild.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlTable.cs" />

@@ -5,21 +5,20 @@ namespace SqlBuilder
 {
     public class BuiltDeleteCommand
     {
-        private BuiltSqlCondition<BuiltDeleteCommand> _condition;
+        private BuiltSqlCondition _condition;
         private string _table;
 
         internal BuiltDeleteCommand()
         {
-
         }
 
         /// <summary>
-        /// Start creation of a contidion to apply to this DELETE command.
+        /// Adds a condition to apply to this DELETE command.
         /// </summary>
-        public BuiltSqlCondition<BuiltDeleteCommand> Where()
+        public BuiltDeleteCommand Where(BuiltSqlCondition condition)
         {
-            _condition = new BuiltSqlCondition<BuiltDeleteCommand>(this);
-            return _condition;
+            _condition = condition;
+            return this;
         }
 
         /// <summary>
@@ -33,7 +32,7 @@ namespace SqlBuilder
         }
 
         /// <summary>
-        /// Generates the DELETE command string. 
+        /// Generates the DELETE command string.
         /// </summary>
         public string Generate()
         {
@@ -41,7 +40,7 @@ namespace SqlBuilder
                 throw new Exception("Table is not set.");
 
             StringBuilder sb = new StringBuilder($"DELETE FROM {Util.FormatSQL(_table)}");
-            if(_condition != null)
+            if (_condition != null)
             {
                 sb.Append($" {_condition.Generate()}");
             }
@@ -53,6 +52,5 @@ namespace SqlBuilder
         {
             return Generate();
         }
-
     }
 }

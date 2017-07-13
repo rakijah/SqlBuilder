@@ -10,16 +10,16 @@ namespace SqlBuilderTest
     [SqlTableName("addresses")]
     public class Addresses
     {
-        [SqlColumnName("userid")]
+        [SqlColumn("userid", SqlColumnType.Integer)]
         public string UserID { get; set; }
 
-        [SqlColumnName("postcode")]
+        [SqlColumn("postcode", SqlColumnType.String)]
         public string Postcode { get; set; }
 
-        [SqlColumnName("state")]
+        [SqlColumn("state", SqlColumnType.String)]
         public string State { get; set; }
 
-        [SqlColumnName("street")]
+        [SqlColumn("street", SqlColumnType.String)]
         public string Street { get; set; }
     }
 }

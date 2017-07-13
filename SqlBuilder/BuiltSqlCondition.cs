@@ -1,20 +1,22 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace SqlBuilder
 {
-    public class BuiltSqlCondition<T>
+    /// <summary>
+    /// The WHERE clause of a SQL statement.
+    /// </summary>
+    public class BuiltSqlCondition
     {
         private List<string> _conditionExpressions { get; }
-        private readonly T _parent;
         private int _currentBlockLayer;
         private bool _lastComponentWasLogicExpression = true;
 
-        internal BuiltSqlCondition(T parent)
+        public BuiltSqlCondition()
         {
             _conditionExpressions = new List<string>();
-            _parent = parent;
         }
 
         /// <summary>
@@ -25,7 +27,7 @@ namespace SqlBuilder
         /// <param name="firstColumn">The column of the lefthand table to be compared.</param>
         /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '&lt;&gt;' '&gt;' etc.</param>
         /// <param name="secondColumn">The column of the righthand table to be compared.</param>
-        public BuiltSqlCondition<T> AddCondition<TFirst, TSecond>(string firstColumn, string comparisonOperator, string secondColumn)
+        public BuiltSqlCondition AddCondition<TFirst, TSecond>(string firstColumn, string comparisonOperator, string secondColumn)
         {
             if (!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
@@ -42,18 +44,21 @@ namespace SqlBuilder
         /// <param name="column">The column to be compared.</param>
         /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '&lt;&gt;' '&gt;' etc.</param>
         /// <param name="value">The value to be compared against.</param>
-        /// <param name="putAroundValue">Optional character that encloses the value if != \0</param>
-        public BuiltSqlCondition<T> AddCondition<Table>(string column, string comparisonOperator, string value, char putAroundValue = '\0')
+        public BuiltSqlCondition AddCondition<Table>(string column, string comparisonOperator, string value)
         {
             if (!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
+
             string condition = $"{Util.FormatSQL(SqlTable.GetTableName<Table>(), column)}{comparisonOperator}";
-            if (putAroundValue == '\0')
-                condition += value;
-            else
-                condition += $"{putAroundValue}{value}{putAroundValue}";
-            
+
+            var attribs = SqlTable.GetColumnAttributes<Table>();
+            if (!attribs.Any(x => x.ColumnName == column))
+                throw new Exception($"Table \"{typeof(Table).FullName}\" does not contain a column named \"{column}\"");
+
+            var attr = attribs.Single(x => x.ColumnName == column);
+            condition += attr.FormatValueFor(value);
+
             _conditionExpressions.Add(condition);
             return this;
         }
@@ -63,7 +68,7 @@ namespace SqlBuilder
         /// This is automatically considered to be a non-logic expression.
         /// </summary>
         /// <param name="condition">The condition to be added (example: SubStr(column, 4)="test"</param>
-        public BuiltSqlCondition<T> AddConditionDirect(string condition)
+        public BuiltSqlCondition AddConditionDirect(string condition)
         {
             _lastComponentWasLogicExpression = false;
             _conditionExpressions.Add(condition.Trim());
@@ -75,9 +80,9 @@ namespace SqlBuilder
         /// </summary>
         /// <typeparam name="Table">The table to be used in the comparison.</typeparam>
         /// <param name="column">The column to be compared.</param>
-        public BuiltSqlCondition<T> IsNull<Table>(string column)
+        public BuiltSqlCondition IsNull<Table>(string column)
         {
-            if(!_lastComponentWasLogicExpression)
+            if (!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
             _conditionExpressions.Add($"{Util.FormatSQL(SqlTable.GetTableName<Table>(), column)} IS NULL");
@@ -87,7 +92,7 @@ namespace SqlBuilder
         /// <summary>
         /// Starts a block of conditions.
         /// </summary>
-        public BuiltSqlCondition<T> BeginBlock()
+        public BuiltSqlCondition BeginBlock()
         {
             //A block must be preceded by a logic expression but can't preceed another logic expression
             //This is fine:
@@ -106,7 +111,7 @@ namespace SqlBuilder
         /// <summary>
         /// Ends a block of conditions.
         /// </summary>
-        public BuiltSqlCondition<T> EndBlock()
+        public BuiltSqlCondition EndBlock()
         {
             if (_currentBlockLayer == 0)
                 throw new ArgumentException("Can't end block when not in block.");
@@ -129,7 +134,7 @@ namespace SqlBuilder
         /// <summary>
         /// Adds an AND between the previous and the next condition.
         /// </summary>
-        public BuiltSqlCondition<T> And()
+        public BuiltSqlCondition And()
         {
             if (_lastComponentWasLogicExpression)
                 throw new Exception("Can't add two logic expressions right behind each other.");
@@ -141,7 +146,7 @@ namespace SqlBuilder
         /// <summary>
         /// Adds an OR between the previous and the next condition.
         /// </summary>
-        public BuiltSqlCondition<T> Or()
+        public BuiltSqlCondition Or()
         {
             if (_lastComponentWasLogicExpression)
                 throw new Exception("Can't add two logic expressions right behind each other.");
@@ -150,17 +155,6 @@ namespace SqlBuilder
             return this;
         }
 
-        /// <summary>
-        /// Finishes building this condition and returns the parent BuiltSelectCommand.
-        /// </summary>
-        public T Finish()
-        {
-            if (_currentBlockLayer > 0)
-                throw new Exception("Can't finish condition while still in block.");
-
-            return _parent;
-        }
-        
         /// <summary>
         /// Generates the condition string, always starting with "WHERE" ending either with an arbitrary condition or a ")".
         /// </summary>

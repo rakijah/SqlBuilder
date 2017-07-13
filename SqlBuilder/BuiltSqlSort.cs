@@ -25,19 +25,21 @@ namespace SqlBuilder
         /// <param name="mode">The sorting mode to be used for this column.</param>
         public BuiltSqlSort SortBy<T>(string column, SqlSortMode mode)
         {
-            switch(mode)
+            switch (mode)
             {
                 case SqlSortMode.ASCENDING:
                     _sortingParametersAscending.Add($"{Util.FormatSQL(SqlTable.GetTableName<T>(), column)}");
                     break;
+
                 case SqlSortMode.DESCENDING:
                     _sortingParametersDescending.Add($"{Util.FormatSQL(SqlTable.GetTableName<T>(), column)}");
                     break;
+
                 case SqlSortMode.NONE:
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }
-            
+
             return this;
         }
 
@@ -73,7 +75,6 @@ namespace SqlBuilder
             sb.Append(" DESC");
             return sb.ToString();
         }
-
 
         public override string ToString()
         {
