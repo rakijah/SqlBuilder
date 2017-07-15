@@ -5,14 +5,14 @@ namespace SqlBuilder
     public static class SqlBuild
     {
         public static bool Initialized { get; internal set; }
+        public static SqlBuildOptions Options { get; private set; }
 
-        public static DatabaseProvider Provider { get; internal set; }
-        public static bool UseSquareBrackets { get; internal set; }
-
-        public static void Configure(DatabaseProvider provider, bool useSquareBrackets)
+        public static void Configure(SqlBuildOptions options = null)
         {
-            Provider = provider;
-            UseSquareBrackets = useSquareBrackets;
+            if (options == null)
+                Options = new SqlBuildOptions();
+            else
+                Options = options;
             Initialized = true;
         }
 
@@ -73,6 +73,18 @@ namespace SqlBuilder
                 throw new Exception("Configure() must be called before building commands.");
 
             return new BuiltInsertCommand<Table>(columns);
+        }
+
+        /// <summary>
+        /// Creates a new UPDATE command to update an existing value in the table.
+        /// </summary>
+        /// <typeparam name="Table">The table whose values are to be updated.</typeparam>
+        public static BuiltUpdateCommand<Table> Update<Table>()
+        {
+            if(!Initialized)
+                throw new Exception("Configure() must be called before building commands.");
+
+            return new BuiltUpdateCommand<Table>();
         }
 
         /// <summary>

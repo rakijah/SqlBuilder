@@ -34,7 +34,7 @@ namespace SqlBuilder
             if (!SqlBuild.Initialized)
                 throw new Exception("Configure() must be called before building commands.");
 
-            if (SqlBuild.UseSquareBrackets)
+            if (SqlBuild.Options.WrapFieldsInSquareBrackets)
                 return $"[{column}]";
             else
                 return column;

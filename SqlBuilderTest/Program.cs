@@ -7,7 +7,12 @@ namespace SqlBuilderTest
     {
         private static void Main(string[] args)
         {
-            SqlBuild.Configure(DatabaseProvider.OracleBefore10G, true);
+            SqlBuild.Configure(
+                    new SqlBuildOptions()
+                    {
+                        Provider = DatabaseProvider.Oracle10GOrLater
+                    }
+                );
 
             var createTableSql = SqlBuild.CreateTable<Users>();
             Console.WriteLine(createTableSql.Generate() + Environment.NewLine);
@@ -30,11 +35,12 @@ namespace SqlBuilderTest
             Console.WriteLine(selectSql + Environment.NewLine);
 
             var insertSql = SqlBuild.InsertInto<Users>("username", "password", "email")
-                                        .AddValues()
+                                        .AddValues(
+                                            new BuiltValueList<Users>(SqlTable.GetColumnNames<Users>())
                                             .AddValueFor("username", "rakijah")
                                             .AddValueFor("password", "dGhlIGdhbWU=")
                                             .AddValueFor("email", "rakijah@fakemail.com")
-                                            .Finish()
+                                         )
                                         .AddRow("user2", "ZmVsbCBmb3IgaXQgYWdhaW4=", "user2@fakemail.com");
 
             Console.WriteLine(insertSql + Environment.NewLine);
@@ -72,6 +78,11 @@ namespace SqlBuilderTest
             }
             Console.ReadLine();
             //*/
+        }
+
+        private static string SurroundWith(string str, char surroundWith)
+        {
+            return $"{surroundWith}{str}{surroundWith}";
         }
     }
 }

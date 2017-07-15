@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SqlBuilder.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,33 +14,43 @@ namespace SqlBuilder
     {
         private string _table;
         private List<string> _columns;
-        private List<BuiltInsertValue<T>> _rowValues;
+        private List<BuiltValueList<T>> _rowValues;
 
         internal BuiltInsertCommand()
         {
-            _rowValues = new List<BuiltInsertValue<T>>();
+            _rowValues = new List<BuiltValueList<T>>();
             _table = SqlTable.GetTableName<T>();
             _columns = SqlTable.GetColumnNames<T>();
         }
 
         internal BuiltInsertCommand(params string[] columns)
         {
-            _rowValues = new List<BuiltInsertValue<T>>();
+            _rowValues = new List<BuiltValueList<T>>();
             _table = SqlTable.GetTableName<T>();
             _columns = new List<string>(columns);
+        }
+
+        public BuiltInsertCommand<T> AddItem(T item)
+        {
+            var value = new BuiltValueList<T>(_columns);
+            var attribs = SqlTable.GetColumnAttributes<T>();
+            foreach (var p2c in SqlTable.PropertiesToColumnNames<T>())
+            {
+                if (!_columns.Contains(p2c.Value))
+                    continue;
+                
+                value.AddValueFor(p2c.Value, p2c.Key.GetValue(item, null).ToString());
+            }
+            return this;
         }
 
         /// <summary>
         /// Add a row of values to this INSERT command.
         /// </summary>
-        public BuiltInsertValue<T> AddValues()
+        public BuiltInsertCommand<T> AddValues(BuiltValueList<T> values)
         {
-            if (_columns == null)
-                throw new Exception("Use Into to initialise the table and columns before calling this function.");
-
-            var newRow = new BuiltInsertValue<T>(this, _columns);
-            _rowValues.Add(newRow);
-            return newRow;
+            _rowValues.Add(values);
+            return this;
         }
 
         /// <summary>
@@ -55,7 +66,7 @@ namespace SqlBuilder
             if (orderedValues.Length != _columns.Count)
                 throw new Exception("Column count does not match amount of specified values.");
 
-            var row = new BuiltInsertValue<T>(this, _columns);
+            var row = new BuiltValueList<T>(_columns);
             for (int i = 0; i < orderedValues.Length; i++)
             {
                 row.AddValueFor(_columns[i], orderedValues[i]);

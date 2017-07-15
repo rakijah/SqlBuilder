@@ -94,7 +94,7 @@ namespace SqlBuilder
         {
             var reader = GetReader<T>(condition, 1);
             if (!reader.HasRows)
-                return new T();
+                return default(T);
 
             return BuildSingle<T>(reader);
         }
@@ -116,7 +116,10 @@ namespace SqlBuilder
             {
                 foreach (var property in propToCol)
                 {
-                    switch (property.Key.GetCustomAttribute<SqlColumn>().Type)
+                    var sqlColumnAttribute = property.Key.GetCustomAttribute<SqlColumn>();
+                    if (sqlColumnAttribute == null)
+                        continue;
+                    switch (sqlColumnAttribute.Type)
                     {
                         case SqlColumnType.Integer:
                             property.Key.SetValue(entity, Convert.ToInt32(reader[property.Value]), null);

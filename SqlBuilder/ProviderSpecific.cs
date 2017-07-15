@@ -14,7 +14,7 @@ namespace SqlBuilder
         {
             get
             {
-                switch (SqlBuild.Provider)
+                switch (SqlBuild.Options.Provider)
                 {
                     case DatabaseProvider.SQLite:
                         return "TEXT";
@@ -32,7 +32,7 @@ namespace SqlBuilder
         /// <returns></returns>
         public static string DateInsertFunction(string dateValue)
         {
-            switch (SqlBuild.Provider)
+            switch (SqlBuild.Options.Provider)
             {
                 case DatabaseProvider.SQLite:
                     return $"datetime('{dateValue}')";
@@ -53,7 +53,10 @@ namespace SqlBuilder
         {
             get
             {
-                switch (SqlBuild.Provider)
+                if (!string.IsNullOrWhiteSpace(SqlBuild.Options.InternalDateFormatString))
+                    return SqlBuild.Options.InternalDateFormatString;
+
+                switch (SqlBuild.Options.Provider)
                 {
                     case DatabaseProvider.SQLite:
                         return "YYYY-MM-DD HH:MM:SS";
@@ -74,7 +77,10 @@ namespace SqlBuilder
         {
             get
             {
-                switch (SqlBuild.Provider)
+                if (!string.IsNullOrWhiteSpace(SqlBuild.Options.DotNetDateFormatString))
+                    return SqlBuild.Options.DotNetDateFormatString;
+
+                switch (SqlBuild.Options.Provider)
                 {
                     default:
                         return "yyyy-MM-dd hh:mm:ss";

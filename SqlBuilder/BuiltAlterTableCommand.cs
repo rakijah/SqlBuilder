@@ -81,7 +81,7 @@ namespace SqlBuilder
         {
             string colAndType = $"{Util.FormatSQL(column)} {newType}";
 
-            switch (SqlBuild.Provider)
+            switch (SqlBuild.Options.Provider)
             {
                 case DatabaseProvider.SqlServer:
                 case DatabaseProvider.MSAccess:

@@ -38,7 +38,7 @@ namespace SqlBuilder.Attributes
 
         private string WrapString(string value)
         {
-            switch (SqlBuild.Provider)
+            switch (SqlBuild.Options.Provider)
             {
                 case DatabaseProvider.Oracle10GOrLater:
                     return $"'{value}'";
