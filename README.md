@@ -1,6 +1,10 @@
 # SqlBuilder  
 This library provides a quick and easy way to build an SQL command string through command-chaining. It's still in early development and currently supports `SELECT`, `INSERT`,`DELETE` and basic `ALTER TABLE` and `CREATE TABLE` commands. Sorting also needs to be redone, as there is currently no way to really specify sorting priority for multiple sorting columns. Formatting dates for specific providers is still a work in progress. 
 
+!! *Don't use this in production environments. It does not use parameters and simply interpolates values into the command string* !!
+
+It's basically an insecure micro-Dapper clone.
+
 # Usage  
 First, create classes that will represent the tables using the custom attributes `SqlTableName` and `SqlColumn`, like so:
 ```csharp
