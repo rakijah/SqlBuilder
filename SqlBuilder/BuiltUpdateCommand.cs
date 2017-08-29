@@ -1,9 +1,8 @@
-﻿using SqlBuilder.Attributes;
+using SqlBuilder.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SqlBuilder
 {
@@ -13,10 +12,9 @@ namespace SqlBuilder
     /// <typeparam name="T">The table that should be updated.</typeparam>
     public class BuiltUpdateCommand<T>
     {
-        private string _table;
-        private Dictionary<string, string> _newColumnValues;
+        private readonly Dictionary<string, string> _newColumnValues;
         private BuiltSqlCondition _condition;
-        private List<SqlColumn> _attributes;
+        private readonly List<SqlColumn> _attributes;
 
         public BuiltUpdateCommand()
         {
@@ -56,7 +54,7 @@ namespace SqlBuilder
         {
             if (_newColumnValues.Count == 0)
                 throw new Exception("Can't update table without columns to be updated.");
-            StringBuilder sb = new StringBuilder($"UPDATE {_table} SET ");
+            StringBuilder sb = new StringBuilder($"UPDATE {SqlTable.GetTableName<T>()} SET ");
             foreach(var colVal in _newColumnValues)
             {
                 var attr = _attributes.Single(x => x.ColumnName == colVal.Key);

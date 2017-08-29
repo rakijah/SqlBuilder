@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SqlBuilder.Attributes;
-using SqlBuilder;
 
 namespace SqlBuilderTest
 {
-    [SqlTableName("users")]
+    [SqlTable("users")]
     public class Users
     {
         [SqlColumn("id", SqlColumnType.Integer)]

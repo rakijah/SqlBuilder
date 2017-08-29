@@ -1,4 +1,3 @@
-﻿using SqlBuilder.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +11,9 @@ namespace SqlBuilder
     /// <typeparam name="T">The table to insert into.</typeparam>
     public class BuiltInsertCommand<T>
     {
-        private string _table;
-        private List<string> _columns;
-        private List<BuiltValueList<T>> _rowValues;
+        private readonly string _table;
+        private readonly List<string> _columns;
+        private readonly List<BuiltValueList<T>> _rowValues;
 
         internal BuiltInsertCommand()
         {
@@ -33,7 +32,6 @@ namespace SqlBuilder
         public BuiltInsertCommand<T> AddItem(T item)
         {
             var value = new BuiltValueList<T>(_columns);
-            var attribs = SqlTable.GetColumnAttributes<T>();
             foreach (var p2c in SqlTable.PropertiesToColumnNames<T>())
             {
                 if (!_columns.Contains(p2c.Value))
@@ -90,7 +88,7 @@ namespace SqlBuilder
                 throw new Exception("Use CreateValues before calling ToString.");
 
             StringBuilder sb = new StringBuilder($"INSERT INTO {Util.FormatSQL(_table)} (");
-            var colFormatted = _columns.Select(c => Util.FormatSQL(c)).ToList().Zip(", ");
+            var colFormatted = _columns.Select(Util.FormatSQL).ToList().Zip(", ");
             sb.Append(colFormatted);
             sb.Append(") VALUES ");
             for (int i = 0; i < _rowValues.Count; i++)

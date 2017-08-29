@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,9 +7,9 @@ namespace SqlBuilder
 {
     public class BuiltSelectCommand
     {
-        private List<string> _fromTables;
-        private List<string> _selectedColumns;
-        private List<SqlJoin> _joins;
+        private readonly List<string> _fromTables;
+        private readonly List<string> _selectedColumns;
+        private readonly List<SqlJoin> _joins;
         private BuiltSqlSort _sort;
         public BuiltSqlCondition Condition { get; set; }
         private string _limit = "";
@@ -28,11 +28,21 @@ namespace SqlBuilder
         /// <param name="selectAllColumns">Whether all columns from this table should be added to the selection.</param>
         public BuiltSelectCommand AddTable<T>(bool selectAllColumns = true)
         {
-            string tableName = SqlTable.GetTableName<T>();
+            return AddTable(typeof(T), selectAllColumns);
+        }
+
+        /// <summary>
+        /// Adds a table to used in the FROM clause.
+        /// </summary>
+        /// <param name="tableType">The table to be added.</param>
+        /// <param name="selectAllColumns">Whether all columns from this table should be added to the selection.</param>
+        public BuiltSelectCommand AddTable(Type tableType, bool selectAllColumns = true)
+        {
+            string tableName = SqlTable.GetTableName(tableType);
             _fromTables.Add(tableName);
 
             if (selectAllColumns)
-                AddColumns<T>(SqlTable.GetColumnNames<T>().ToArray());
+                AddColumns(tableType, SqlTable.GetColumnNames(tableType).ToArray());
 
             return this;
         }
@@ -44,9 +54,19 @@ namespace SqlBuilder
         /// <param name="columns">The columns to be selected.</param>
         public BuiltSelectCommand AddColumns<T>(params string[] columns)
         {
-            string tableName = SqlTable.GetTableName<T>();
-            if (!SqlTable.ContainsAllColumns<T>(columns))
-                throw new Exception($"Table \"{SqlTable.GetTableName<T>()}\" does not contain all columns specified.");
+            return AddColumns(typeof(T), columns);
+        }
+
+        /// <summary>
+        /// Add columns to be selected.
+        /// </summary>
+        /// <param name="tableType">The table containing the columns.</param>
+        /// <param name="columns">The columns to be selected.</param>
+        public BuiltSelectCommand AddColumns(Type tableType, params string[] columns)
+        {
+            string tableName = SqlTable.GetTableName(tableType);
+            if (!SqlTable.ContainsAllColumns(tableType, columns))
+                throw new Exception($"Table \"{SqlTable.GetTableName(tableType)}\" does not contain all columns specified.");
 
             foreach (string column in columns)
             {
@@ -109,6 +129,29 @@ namespace SqlBuilder
         }
 
         /// <summary>
+        /// Adds a JOIN to this BuiltSelectCommand.
+        /// </summary>
+        /// <param name="toJoin">The new table of this join.</param>
+        /// <param name="on">The existing table to be used for comparison.</param>
+        /// <param name="toJoinColumn">The column to use from the new table.</param>
+        /// <param name="onColumn">The column to use from the existing table.</param>
+        public BuiltSelectCommand Join(Type toJoin, Type on, string toJoinColumn, string onColumn)
+        {
+            if (!SqlTable.ContainsColumn(toJoin, toJoinColumn) ||
+                !SqlTable.ContainsColumn(on, onColumn))
+                throw new Exception("The specified tables do not contain the specified columns.");
+
+            _joins.Add(new SqlJoin
+            {
+                FirstTable = SqlTable.GetTableName(on),
+                SecondTable = SqlTable.GetTableName(toJoin),
+                FirstColumn = onColumn,
+                SecondColumn = toJoinColumn
+            });
+            return this;
+        }
+
+        /// <summary>
         /// Creates a WHERE clause for this BuiltSqlCommand.
         /// Calling this twice on a BuiltSelectCommand will overwrite the first call.
         /// </summary>
@@ -151,15 +194,16 @@ namespace SqlBuilder
             StringBuilder sb = new StringBuilder("SELECT ");
             sb.Append(_selectedColumns.Count == 0 ? "*" : $"{_selectedColumns.Zip(", ")}");
 
-            sb.Append($" FROM {_fromTables.Select(t => Util.FormatSQL(t)).ToList().Zip(", ")}");
+            sb.Append($" FROM {_fromTables.Select(Util.FormatSQL).ToList().Zip(", ")}");
+            
+            if (_joins.Count > 0)
+            {
+                sb.Append($" {_joins.Select(j => j.ToString()).ToList().Zip(" ")}");
+            }
 
             if (Condition != null)
             {
                 sb.Append($" {Condition}");
-            }
-            if (_joins.Count > 0)
-            {
-                sb.Append($" {_joins.Select(j => j.ToString()).ToList().Zip(" ")}");
             }
 
             if (_sort != null)

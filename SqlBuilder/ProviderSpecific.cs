@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace SqlBuilder
 {
@@ -62,7 +62,7 @@ namespace SqlBuilder
                         return "YYYY-MM-DD HH:MM:SS";
 
                     case DatabaseProvider.Oracle10GOrLater:
-                        return $"YYYY-MM-DD HH24:MI:SS";
+                        return "YYYY-MM-DD HH24:MI:SS";
 
                     default:
                         throw new NotImplementedException("This provider has not been fully implemented yet. Sorry!");

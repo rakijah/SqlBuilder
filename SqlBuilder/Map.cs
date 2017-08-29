@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace SqlBuilder
 {
@@ -10,16 +10,16 @@ namespace SqlBuilder
     /// <typeparam name="T2"></typeparam>
     internal class Map<T1, T2>
     {
-        private Dictionary<T1, T2> _forward = new Dictionary<T1, T2>();
-        private Dictionary<T2, T1> _reverse = new Dictionary<T2, T1>();
+        private readonly Dictionary<T1, T2> _forward = new Dictionary<T1, T2>();
+        private readonly Dictionary<T2, T1> _reverse = new Dictionary<T2, T1>();
 
-        public Dictionary<T1, T2> ForwardD { get { return _forward; } }
-        public Dictionary<T2, T1> ReverseD { get { return _reverse; } }
+        public Dictionary<T1, T2> ForwardD => _forward;
+        public Dictionary<T2, T1> ReverseD => _reverse;
 
         public Map()
         {
-            this.Forward = new Indexer<T1, T2>(_forward);
-            this.Reverse = new Indexer<T2, T1>(_reverse);
+            Forward = new Indexer<T1, T2>(_forward);
+            Reverse = new Indexer<T2, T1>(_reverse);
         }
 
         public static Map<T1, T2> FromDictionary(Dictionary<T1, T2> dict)
@@ -40,7 +40,7 @@ namespace SqlBuilder
 
         internal class Indexer<T3, T4>
         {
-            private Dictionary<T3, T4> _dictionary;
+            private readonly Dictionary<T3, T4> _dictionary;
 
             public Indexer(Dictionary<T3, T4> dictionary)
             {
@@ -49,8 +49,8 @@ namespace SqlBuilder
 
             public T4 this[T3 index]
             {
-                get { return _dictionary[index]; }
-                set { _dictionary[index] = value; }
+                get => _dictionary[index];
+                set => _dictionary[index] = value;
             }
         }
 
@@ -60,7 +60,7 @@ namespace SqlBuilder
             _reverse.Add(t2, t1);
         }
 
-        public Indexer<T1, T2> Forward { get; private set; }
-        public Indexer<T2, T1> Reverse { get; private set; }
+        public Indexer<T1, T2> Forward { get; }
+        public Indexer<T2, T1> Reverse { get; }
     }
 }

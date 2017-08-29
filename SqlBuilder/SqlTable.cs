@@ -1,4 +1,4 @@
-﻿using SqlBuilder.Attributes;
+using SqlBuilder.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -11,23 +11,31 @@ namespace SqlBuilder
     public static class SqlTable
     {
         //Caching to reduce the performance impact of reflection.
-        private static Dictionary<Type, string> _tableNames = new Dictionary<Type, string>();
-        private static Dictionary<Type, List<string>> _tableColumns = new Dictionary<Type, List<string>>();
-        private static Dictionary<Type, Map<PropertyInfo, string>> _tablePropertiesAndColumns = new Dictionary<Type, Map<PropertyInfo, string>>();
+        private static readonly Dictionary<Type, string> _tableNames = new Dictionary<Type, string>();
+        private static readonly Dictionary<Type, List<string>> _tableColumns = new Dictionary<Type, List<string>>();
+        private static readonly Dictionary<Type, Map<PropertyInfo, string>> _tablePropertiesAndColumns = new Dictionary<Type, Map<PropertyInfo, string>>();
 
         /// <summary>
-        /// Return the name of the table provided by the SqlTableName attribute.
+        /// Return the name of the table provided by the SqlTable attribute.
         /// </summary>
         /// <typeparam name="T">The type whose table name should be returned.</typeparam>
         public static string GetTableName<T>()
         {
-            var type = typeof(T);
+            return GetTableName(typeof(T));
+        }
+
+        /// <summary>
+        /// Return the name of the table provided by the SqlTable attribute.
+        /// </summary>
+        /// <param name="type">The type whose table name should be returned.</param>
+        public static string GetTableName(Type type)
+        {
             if (_tableNames.ContainsKey(type))
                 return _tableNames[type];
 
-            var tableNameAttributes = (SqlTableName[])type.GetCustomAttributes(typeof(SqlTableName), true);
+            var tableNameAttributes = (Attributes.SqlTable[])type.GetCustomAttributes(typeof(Attributes.SqlTable), true);
             if (tableNameAttributes.Length == 0)
-                throw new Exception($"Type \"{type.FullName}\" does not have a {typeof(SqlTableName).FullName} attribute.");
+                throw new Exception($"Type \"{type.FullName}\" does not have a {typeof(Attributes.SqlTable).FullName} attribute.");
 
             var tableName = tableNameAttributes[0].TableName;
             _tableNames.Add(type, tableName);
@@ -41,7 +49,17 @@ namespace SqlBuilder
         /// <param name="columns">The columns that are supposed to be on the type T.</param>
         public static bool ContainsAllColumns<T>(params string[] columns)
         {
-            var tableColumns = GetColumnNames<T>();
+            return ContainsAllColumns(typeof(T));
+        }
+
+        /// <summary>
+        /// Checks whether the specified type contains all columns whose names are in the provided string array.
+        /// </summary>
+        /// <param name="tableType">The type to check for columns.</param>
+        /// <param name="columns">The columns that are supposed to be on the type T.</param>
+        public static bool ContainsAllColumns(Type tableType, params string[] columns)
+        {
+            var tableColumns = GetColumnNames(tableType);
             foreach (var c in columns)
             {
                 if (!tableColumns.Contains(c))
@@ -59,7 +77,18 @@ namespace SqlBuilder
         /// <returns></returns>
         public static bool ContainsColumn<T>(string column)
         {
-            return GetColumnNames<T>().Contains(column);
+            return ContainsColumn(typeof(T), column);
+        }
+
+        /// <summary>
+        /// Checks whether a type contains a column with the specified name.
+        /// </summary>
+        /// <param name="tableType">The type to be checked.</param>
+        /// <param name="column">The name of the column.</param>
+        /// <returns></returns>
+        public static bool ContainsColumn(Type tableType, string column)
+        {
+            return GetColumnNames(tableType).Contains(column);
         }
 
         /// <summary>
@@ -68,14 +97,22 @@ namespace SqlBuilder
         /// <typeparam name="T">The type whose properties should be inspected.</typeparam>
         public static Dictionary<PropertyInfo, string> PropertiesToColumnNames<T>()
         {
-            var type = typeof(T);
+            return PropertiesToColumnNames(typeof(T));
+        }
+
+        /// <summary>
+        /// Returns a dictionary that maps the type's properties to their SQL column names.
+        /// </summary>
+        /// <param name="type">The type whose properties should be inspected.</param>
+        public static Dictionary<PropertyInfo, string> PropertiesToColumnNames(Type type)
+        {
             if (_tablePropertiesAndColumns.ContainsKey(type))
                 return _tablePropertiesAndColumns[type].ForwardD;
 
             Dictionary<PropertyInfo, string> lookupTable = new Dictionary<PropertyInfo, string>();
-            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+            foreach (PropertyInfo propertyInfo in type.GetProperties())
             {
-                object[] columnNameAttributes = propertyInfo.GetCustomAttributes(typeof(SqlColumn), true);
+                object[] columnNameAttributes = propertyInfo.GetCustomAttributes(typeof(SqlColumn), false);
                 if (columnNameAttributes.Length > 0)
                 {
                     SqlColumn columnNameAttribute = (SqlColumn)columnNameAttributes[0];
@@ -116,12 +153,20 @@ namespace SqlBuilder
         /// <typeparam name="T">The type to be inspected.</typeparam>
         public static List<string> GetColumnNames<T>()
         {
-            Type type = typeof(T);
+            return GetColumnNames(typeof(T));
+        }
+
+        /// <summary>
+        /// Returns a list with all the column names of the specified type.
+        /// </summary>
+        /// <param name="type">The type to be inspected.</param>
+        public static List<string> GetColumnNames(Type type)
+        {
             if (_tableColumns.ContainsKey(type))
                 return _tableColumns[type];
 
             List<string> columnNames = new List<string>();
-            foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+            foreach (PropertyInfo propertyInfo in type.GetProperties())
             {
                 object[] columnNameAttributes = propertyInfo.GetCustomAttributes(typeof(SqlColumn), true);
                 if (columnNameAttributes.Length > 0)
@@ -142,6 +187,24 @@ namespace SqlBuilder
         {
             List<SqlColumn> columnAttributes = new List<SqlColumn>();
             foreach (PropertyInfo propertyInfo in typeof(T).GetProperties())
+            {
+                object[] columnNameAttributes = propertyInfo.GetCustomAttributes(typeof(SqlColumn), true);
+                if (columnNameAttributes.Length > 0)
+                {
+                    columnAttributes.Add((SqlColumn)columnNameAttributes[0]);
+                }
+            }
+            return columnAttributes;
+        }
+
+        /// <summary>
+        /// Returns a list of SqlBuilder.Attributes.SqlColumn instances that are attached to the types properties.
+        /// </summary>
+        /// <param name="tableType">The type to be inspected.</param>
+        public static List<SqlColumn> GetColumnAttributes(Type tableType)
+        {
+            List<SqlColumn> columnAttributes = new List<SqlColumn>();
+            foreach (PropertyInfo propertyInfo in tableType.GetProperties())
             {
                 object[] columnNameAttributes = propertyInfo.GetCustomAttributes(typeof(SqlColumn), true);
                 if (columnNameAttributes.Length > 0)

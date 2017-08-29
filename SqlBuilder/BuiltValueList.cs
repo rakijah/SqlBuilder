@@ -1,4 +1,4 @@
-﻿using SqlBuilder.Attributes;
+using SqlBuilder.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,9 +8,9 @@ namespace SqlBuilder
 {
     public class BuiltValueList<T>
     {
-        private List<string> _columns;
-        private Dictionary<string, string> _values;
-        private List<SqlColumn> _attributes;
+        private readonly List<string> _columns;
+        private readonly Dictionary<string, string> _values;
+        private readonly List<SqlColumn> _attributes;
 
         /// <summary>
         /// Creates a new value list using the specified columns.
@@ -47,13 +47,12 @@ namespace SqlBuilder
         /// </summary>
         /// <param name="column">The column that is going to hold the value.</param>
         /// <param name="value">The value to be inserted.</param>
-        /// <param name="putAroundValue"></param>
         public BuiltValueList<T> AddValueFor(string column, string value)
         {
             if (!_columns.Contains(column))
                 throw new Exception($"This BuiltInsertValue does not contain a column named \"{column}\"");
 
-            if (!_attributes.Any(x => x.ColumnName == column))
+            if (_attributes.All(x => x.ColumnName != column))
                 throw new Exception($"Table \"{typeof(T).FullName}\" does not contain a column named \"{column}\"");
 
             var attr = _attributes.Single(x => x.ColumnName == column);

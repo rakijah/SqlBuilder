@@ -1,4 +1,4 @@
-﻿using SqlBuilder.Attributes;
+using SqlBuilder.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,8 +8,8 @@ namespace SqlBuilder
 {
     public class BuiltCreateCommand<T>
     {
-        private string _tableName;
-        private List<SqlColumn> _columns;
+        private readonly string _tableName;
+        private readonly List<SqlColumn> _columns;
         private string _primaryKeyColumn;
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace SqlBuilder
         /// <param name="columnName">The column to be made PRIMARY KEY.</param>
         public BuiltCreateCommand<T> SetPrimaryKey(string columnName)
         {
-            if (!_columns.Any(x => x.ColumnName == columnName))
+            if (_columns.All(x => x.ColumnName != columnName))
                 throw new Exception("");
 
             _primaryKeyColumn = columnName;

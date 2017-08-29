@@ -140,3 +140,32 @@ public class Customers
 }
 ```
 Currently, only `Integer`, `String` and `Date` are supported. Date also has conversion problems due to different providers sometimes using completely different approaches to storing dates (for example SQLite doesn't store dates at all and simply uses TEXT/VARCHAR columns instead).
+
+### SqlForeignKey
+Allows you to query entities from foreign key constraints, like so:
+```csharp
+[SqlTable("bankaccount")]
+public class BankAccount
+{
+    [SqlColumn("accountid", SqlColumnType.String)]
+    public string Id { get; set; }
+
+    [SqlColumn("customerid", SqlColumnType.String)]
+    [SqlForeignKey("id", typeof(Customer))]
+    public Customer Customer { get; set; }
+}
+
+[SqlTable("customer")]
+public class Customer
+{
+    [SqlColumn("id", SqlColumnType.Integer)]
+    public string Id { get; set; }
+
+    [SqlColumn("lastname", SqlColumnType.String)]
+    public string Name { get; set; }
+}
+
+[...]
+var account = _fetcher.Single<BankAccount>(...);
+Console.WriteLine($"Account {account.Id} belongs to {account.Customer.Name}.");
+```

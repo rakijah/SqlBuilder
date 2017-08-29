@@ -1,4 +1,4 @@
-﻿using SqlBuilder.Attributes;
+using SqlBuilder.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -12,7 +12,7 @@ namespace SqlBuilder
     /// </summary>
     public class EntityFetcher
     {
-        private DbConnection _connection;
+        private readonly DbConnection _connection;
 
         /// <summary>
         /// Creates a new EntityFetcher.<para />
@@ -33,7 +33,19 @@ namespace SqlBuilder
         /// <returns>A DbDataReader that has tried to query rows for entities of type T.</returns>
         internal DbDataReader GetReader<T>(BuiltSqlCondition condition = null, int amountOfRows = -1)
         {
-            var select = SqlBuild.Select<T>();
+            return GetReader(typeof(T), condition, amountOfRows);
+        }
+
+        /// <summary>
+        /// Returns a reader for the specified amount of rows for the specified entity type.
+        /// </summary>
+        /// <param name="entityType">The type of entity to be queried.</param>
+        /// <param name="condition">An optional condition to allow querying for specific rows. Leave at null to query all rows.</param>
+        /// <param name="amountOfRows">The amount of rows to be returned (maximum). Leave at -1 to query all rows.</param>
+        /// <returns>A DbDataReader that has tried to query rows for entities of type T.</returns>
+        internal DbDataReader GetReader(Type entityType, BuiltSqlCondition condition = null, int amountOfRows = -1)
+        {
+            var select = SqlBuild.Select(entityType);
 
             if (condition != null)
                 select.Condition = condition;
@@ -44,6 +56,21 @@ namespace SqlBuilder
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = select.Generate();
+                return command.ExecuteReader();
+            }
+        }
+
+        /// <summary>
+        /// Returns a reader for the specified amount of rows for the specified entity type.
+        /// </summary>
+        /// <param name="entityType">The type of entity to be queried.</param>
+        /// <param name="commandString">The command to execute to create the reader.</param>
+        /// <returns>A DbDataReader that has tried to query rows for entities of type entityType.</returns>
+        internal DbDataReader GetReader(Type entityType, string commandString)
+        {
+            using (var command = _connection.CreateCommand())
+            {
+                command.CommandText = commandString;
                 return command.ExecuteReader();
             }
         }
@@ -110,15 +137,28 @@ namespace SqlBuilder
         internal T BuildSingle<T>(DbDataReader reader)
             where T : new()
         {
-            var propToCol = SqlTable.PropertiesToColumnNames<T>();
-            T entity = new T();
-            try
+
+            return (T)BuildSingle(typeof(T), reader);
+        }
+
+        /// <summary>
+        /// Takes the current row that the reader is on and uses it to construct a new entity of type T.<para />
+        /// Does not alter the reader's cursor at all.
+        /// May return an incomplete entity in case of failure.
+        /// </summary>
+        /// <param name="tableType">The type of entity to be constructed.</param>
+        /// <param name="reader">The reader to be used. Make sure .HasRows is true before passing this in.</param>
+        /// <returns>The constructed entity of type T.</returns>
+        internal object BuildSingle(Type tableType, DbDataReader reader)
+        {
+            var propToCol = SqlTable.PropertiesToColumnNames(tableType);
+            var entity = Activator.CreateInstance(tableType);
+            foreach (var property in propToCol)
             {
-                foreach (var property in propToCol)
+
+                var sqlColumnAttribute = property.Key.GetCustomAttribute<SqlColumn>();
+                if (sqlColumnAttribute != null && property.Key.GetCustomAttribute<SqlForeignKey>() == null)
                 {
-                    var sqlColumnAttribute = property.Key.GetCustomAttribute<SqlColumn>();
-                    if (sqlColumnAttribute == null)
-                        continue;
                     switch (sqlColumnAttribute.Type)
                     {
                         case SqlColumnType.Integer:
@@ -140,8 +180,38 @@ namespace SqlBuilder
                             throw new Exception("Unsupported column type.");
                     }
                 }
+
+                if (sqlColumnAttribute == null)
+                    continue;
+                var sqlForeignKeyAttributes = property.Key.GetCustomAttributes<SqlForeignKey>();
+                foreach (var foreignKey in sqlForeignKeyAttributes)
+                {
+                    Type foreignTable = foreignKey.ForeignTable;
+                    var properties = foreignTable.GetProperties();
+                    foreach (var prop in properties)
+                    {
+                        var attrib = prop.GetCustomAttribute<SqlColumn>();
+                        if (attrib == null)
+                            continue;
+                        if (attrib.ColumnName == foreignKey.ForeignTableColumnName)
+                        {
+                            var foreignSelect = SqlBuild.Select(foreignTable)
+                                .Join(tableType, foreignTable, sqlColumnAttribute.ColumnName, foreignKey.ForeignTableColumnName)
+                                .Where(
+                                    new BuiltSqlCondition()
+                                        .AddCondition(tableType, sqlColumnAttribute.ColumnName, "=", (string)reader[sqlColumnAttribute.ColumnName]));
+                            var foreignReader =
+                                GetReader(foreignTable, foreignSelect.Generate());
+                            if (!foreignReader.Read())
+                                continue;
+
+                            var foreignEntity = BuildSingle(foreignTable, foreignReader);
+                            property.Key.SetValue(entity, foreignEntity);
+                            break;
+                        }
+                    }
+                }
             }
-            catch (Exception) { }
             return entity;
         }
     }

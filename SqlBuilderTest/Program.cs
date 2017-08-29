@@ -1,11 +1,13 @@
-﻿using SqlBuilder;
+using SqlBuilder;
 using System;
+using System.Collections.Generic;
+using System.Data.SqlClient;
 
 namespace SqlBuilderTest
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static void Main()
         {
             SqlBuild.Configure(
                     new SqlBuildOptions()
@@ -36,7 +38,7 @@ namespace SqlBuilderTest
 
             var insertSql = SqlBuild.InsertInto<Users>("username", "password", "email")
                                         .AddValues(
-                                            new BuiltValueList<Users>(SqlTable.GetColumnNames<Users>())
+                                            new BuiltValueList<Users>(new List<string> {"username", "password", "email"})
                                             .AddValueFor("username", "rakijah")
                                             .AddValueFor("password", "dGhlIGdhbWU=")
                                             .AddValueFor("email", "rakijah@fakemail.com")
@@ -52,13 +54,12 @@ namespace SqlBuilderTest
             Console.WriteLine(deleteSql + Environment.NewLine);
 
             var alterTableSql = SqlBuild.AlterTable<Users>()
-                                                    .Add("firstname", "varchar(50)", true)
-                                                    .Add("lastname", "varchar(50)", true)
+                                                    .Add("firstname", "varchar(50)")
+                                                    .Add("lastname", "varchar(50)")
                                                     .Drop("fullname")
                                                     .ChangeColumnType("username", "VARCHAR(255)");
 
             Console.WriteLine(alterTableSql + Environment.NewLine);
-
             Console.ReadLine();
 
             /*
@@ -78,11 +79,6 @@ namespace SqlBuilderTest
             }
             Console.ReadLine();
             //*/
-        }
-
-        private static string SurroundWith(string str, char surroundWith)
-        {
-            return $"{surroundWith}{str}{surroundWith}";
         }
     }
 }

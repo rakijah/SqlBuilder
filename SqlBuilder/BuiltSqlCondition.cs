@@ -38,6 +38,24 @@ namespace SqlBuilder
         }
 
         /// <summary>
+        /// Adds a condition to the WHERE clause that compares two columns.
+        /// </summary>
+        /// <param name="first">The first (lefthand) table of the comparison.</param>
+        /// <param name="second">The second (righthand) table of the comparison.</param>
+        /// <param name="firstColumn">The column of the lefthand table to be compared.</param>
+        /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '&lt;&gt;' '&gt;' etc.</param>
+        /// <param name="secondColumn">The column of the righthand table to be compared.</param>
+        public BuiltSqlCondition AddCondition(Type first, Type second, string firstColumn, string comparisonOperator, string secondColumn)
+        {
+            if (!_lastComponentWasLogicExpression)
+                throw new ArgumentException("Can't add another condition without a logic expression in between.");
+            _lastComponentWasLogicExpression = false;
+
+            _conditionExpressions.Add($"{Util.FormatSQL(SqlTable.GetTableName(first), firstColumn)}{comparisonOperator}{Util.FormatSQL(SqlTable.GetTableName(second), secondColumn)}");
+            return this;
+        }
+
+        /// <summary>
         /// Adds an "equals" condition to the WHERE clause that compares a column to a static value.
         /// </summary>
         /// <typeparam name="Table">The table to be used in the comparison.</typeparam>
@@ -46,15 +64,27 @@ namespace SqlBuilder
         /// <param name="value">The value to be compared against.</param>
         public BuiltSqlCondition AddCondition<Table>(string column, string comparisonOperator, string value)
         {
+            return AddCondition(typeof(Table), column, comparisonOperator, value);
+        }
+
+        /// <summary>
+        /// Adds an "equals" condition to the WHERE clause that compares a column to a static value.
+        /// </summary>
+        /// <param name="tableType">The table to be used in the comparison.</param>
+        /// <param name="column">The column to be compared.</param>
+        /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '&lt;&gt;' '&gt;' etc.</param>
+        /// <param name="value">The value to be compared against.</param>
+        public BuiltSqlCondition AddCondition(Type tableType, string column, string comparisonOperator, string value)
+        {
             if (!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
 
-            string condition = $"{Util.FormatSQL(SqlTable.GetTableName<Table>(), column)}{comparisonOperator}";
+            string condition = $"{Util.FormatSQL(SqlTable.GetTableName(tableType), column)}{comparisonOperator}";
 
-            var attribs = SqlTable.GetColumnAttributes<Table>();
-            if (!attribs.Any(x => x.ColumnName == column))
-                throw new Exception($"Table \"{typeof(Table).FullName}\" does not contain a column named \"{column}\"");
+            var attribs = SqlTable.GetColumnAttributes(tableType);
+            if (attribs.All(x => x.ColumnName != column))
+                throw new Exception($"Table \"{tableType.FullName}\" does not contain a column named \"{column}\"");
 
             var attr = attribs.Single(x => x.ColumnName == column);
             condition += attr.FormatValueFor(value);

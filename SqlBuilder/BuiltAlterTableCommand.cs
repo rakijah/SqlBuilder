@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,8 +10,8 @@ namespace SqlBuilder
     /// <typeparam name="T">The table to be altered.</typeparam>
     public class BuiltAlterTableCommand<T>
     {
-        private string _table;
-        private List<string> _components;
+        private readonly string _table;
+        private readonly List<string> _components;
 
         internal BuiltAlterTableCommand()
         {
@@ -35,9 +35,9 @@ namespace SqlBuilder
         /// <param name="columns">The columns to be dropped.</param>
         public BuiltAlterTableCommand<T> Drop(params string[] columns)
         {
-            for (int i = 0; i < columns.Length; i++)
+            foreach (string col in columns)
             {
-                _components.Add($"DROP COLUMN {Util.FormatSQL(columns[i])}");
+                _components.Add($"DROP COLUMN {Util.FormatSQL(col)}");
             }
             return this;
         }

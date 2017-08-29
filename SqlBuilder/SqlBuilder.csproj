@@ -45,7 +45,8 @@
   <ItemGroup>
     <Compile Include="Attributes\SqlColumn.cs" />
     <Compile Include="Attributes\SqlColumnType.cs" />
-    <Compile Include="Attributes\SqlTableName.cs" />
+    <Compile Include="Attributes\SqlForeignKey.cs" />
+    <Compile Include="Attributes\SqlTable.cs" />
     <Compile Include="BuiltAlterTableCommand.cs" />
     <Compile Include="BuiltCreateCommand.cs" />
     <Compile Include="BuiltDeleteCommand.cs" />

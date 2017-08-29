@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,9 +6,9 @@ namespace SqlBuilder
 {
     public class BuiltSqlSort
     {
-        private BuiltSelectCommand _parent;
-        private List<string> _sortingParametersAscending;
-        private List<string> _sortingParametersDescending;
+        private readonly BuiltSelectCommand _parent;
+        private readonly List<string> _sortingParametersAscending;
+        private readonly List<string> _sortingParametersDescending;
 
         internal BuiltSqlSort(BuiltSelectCommand parent)
         {
@@ -34,8 +34,6 @@ namespace SqlBuilder
                 case SqlSortMode.DESCENDING:
                     _sortingParametersDescending.Add($"{Util.FormatSQL(SqlTable.GetTableName<T>(), column)}");
                     break;
-
-                case SqlSortMode.NONE:
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }

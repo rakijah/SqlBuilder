@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace SqlBuilder
 {
@@ -9,10 +9,7 @@ namespace SqlBuilder
 
         public static void Configure(SqlBuildOptions options = null)
         {
-            if (options == null)
-                Options = new SqlBuildOptions();
-            else
-                Options = options;
+            Options = options ?? new SqlBuildOptions();
             Initialized = true;
         }
 
@@ -34,10 +31,20 @@ namespace SqlBuilder
         /// <param name="selectAllColumns">Whether to add all columns in this table type to the select.</param>
         public static BuiltSelectCommand Select<T>(bool selectAllColumns = true)
         {
+            return Select(typeof(T), selectAllColumns);
+        }
+
+        /// <summary>
+        /// Creates a new SELECT command.
+        /// </summary>
+        /// <param name="tableType">The main table to be used in the select.</param>
+        /// <param name="selectAllColumns">Whether to add all columns in this table type to the select.</param>
+        public static BuiltSelectCommand Select(Type tableType, bool selectAllColumns = true)
+        {
             if (!Initialized)
                 throw new Exception("Configure() must be called before building commands.");
             var bsc = new BuiltSelectCommand();
-            bsc.AddTable<T>(selectAllColumns);
+            bsc.AddTable(tableType, selectAllColumns);
             return bsc;
         }
 
