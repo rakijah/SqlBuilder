@@ -1,6 +1,8 @@
 using SqlBuilder;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
 
 namespace SqlBuilderTest
@@ -10,14 +12,14 @@ namespace SqlBuilderTest
         private static void Main()
         {
             SqlBuild.Configure(
-                    new SqlBuildOptions()
+                    new SqlBuildOptions
                     {
                         Provider = DatabaseProvider.Oracle10GOrLater
                     }
                 );
 
             var createTableSql = SqlBuild.CreateTable<Users>();
-            Console.WriteLine(createTableSql.Generate() + Environment.NewLine);
+            Console.WriteLine(createTableSql.GenerateStatement() + Environment.NewLine);
 
             var selectSql = SqlBuild.Select<Users>(false)
                                          .AddColumns<Users>("username", "email")
@@ -25,12 +27,12 @@ namespace SqlBuilderTest
                                          .AddColumns<Addresses>("postcode", "street");
             selectSql.Where(new BuiltSqlCondition()
                             .BeginBlock()
-                            .AddCondition<Users>("lastname", "=", "Jones")
+                            .AddCondition<Users>("lastname", "=", "Jones", DbType.String)
                             .And()
-                            .AddCondition<Addresses>("state", "=", "Ohio")
+                            .AddCondition<Addresses>("state", "=", "Ohio", DbType.String)
                             .EndBlock()
                             .Or()
-                            .AddCondition<Users>("id", ">", "50"))
+                            .AddCondition<Users>("id", ">", "50", DbType.Int32))
                         .OrderBy()
                         .SortBy<Users>("firstname", SqlSortMode.DESCENDING)
                         .Finish();
@@ -49,8 +51,8 @@ namespace SqlBuilderTest
 
             var deleteSql = SqlBuild.Delete()
                                         .From<Users>()
-                                        .Where(new BuiltSqlCondition().AddCondition<Users>("id", "<", "10"));
-
+                                        .Where(new BuiltSqlCondition().AddCondition<Users>("id", "<", "10", DbType.Int32));
+            
             Console.WriteLine(deleteSql + Environment.NewLine);
 
             var alterTableSql = SqlBuild.AlterTable<Users>()
@@ -60,11 +62,20 @@ namespace SqlBuilderTest
                                                     .ChangeColumnType("username", "VARCHAR(255)");
 
             Console.WriteLine(alterTableSql + Environment.NewLine);
+            
             Console.ReadLine();
 
             /*
             SqlConnection connection = new SqlConnection("Data Source=Example;User Id=admin;password=password;");
             connection.Open();
+            var cmd = selectSql.GenerateCommand(connection);
+            Console.WriteLine($"CommandText: {cmd.CommandText}");
+            foreach (DbParameter param in cmd.Parameters)
+            {
+                Console.WriteLine($"Name: {param.ParameterName} Value: {param.Value}, Type: {param.DbType}");
+            }
+            Console.ReadLine();
+            
             EntityFetcher fetcher = new EntityFetcher(connection);
             var usersBetween20And40 = fetcher.All<Users>(
                     new BuiltSqlCondition()

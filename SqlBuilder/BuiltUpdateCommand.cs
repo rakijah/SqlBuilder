@@ -1,6 +1,8 @@
 using SqlBuilder.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 
@@ -12,14 +14,12 @@ namespace SqlBuilder
     /// <typeparam name="T">The table that should be updated.</typeparam>
     public class BuiltUpdateCommand<T>
     {
-        private readonly Dictionary<string, string> _newColumnValues;
+        private readonly List<ColumnWithValue> _newColumnValues;
         private BuiltSqlCondition _condition;
-        private readonly List<SqlColumn> _attributes;
 
         public BuiltUpdateCommand()
         {
-            _newColumnValues = new Dictionary<string, string>();
-            _attributes = SqlTable.GetColumnAttributes<T>();
+            _newColumnValues = new List<ColumnWithValue>();
         }
 
         /// <summary>
@@ -27,12 +27,18 @@ namespace SqlBuilder
         /// </summary>
         /// <param name="column">The column to be updated.</param>
         /// <param name="value">The value to be used in the update.</param>
-        public BuiltUpdateCommand<T> Set(string column, string value)
+        public BuiltUpdateCommand<T> Set(string column, string value, DbType valueType)
         {
-            if (!_newColumnValues.ContainsKey(column))
-                _newColumnValues.Add(column, value);
+            if (_newColumnValues.All(cwv => cwv.Column != column))
+                _newColumnValues.Add(new ColumnWithValue {Column = column, Value = value, ValueType = valueType});
             else
-                _newColumnValues[column] = value;
+            {
+                var col = _newColumnValues.Find(cwv => cwv.Column == column);
+                _newColumnValues.Remove(col);
+                col.Value = value;
+                col.ValueType = valueType;
+                _newColumnValues.Add(col);
+            }
             
             return this;
         }
@@ -50,23 +56,64 @@ namespace SqlBuilder
         /// <summary>
         /// Generates the actual UPDATE command string.
         /// </summary>
-        public string Generate()
+        public string GenerateStatement()
         {
             if (_newColumnValues.Count == 0)
                 throw new Exception("Can't update table without columns to be updated.");
-            StringBuilder sb = new StringBuilder($"UPDATE {SqlTable.GetTableName<T>()} SET ");
-            foreach(var colVal in _newColumnValues)
+
+            StringBuilder sb = new StringBuilder($"UPDATE {SqlTableHelper.GetTableName<T>()} SET ");
+            for (int i = 0; i < _newColumnValues.Count; i++)
             {
-                var attr = _attributes.Single(x => x.ColumnName == colVal.Key);
-                string formattedValue = attr.FormatValueFor(colVal.Value);
-                sb.Append($"{Util.FormatSQL(colVal.Key)}={formattedValue}");
-                if (colVal.Key != _newColumnValues.Last().Key)
+                var colVal = _newColumnValues[i];
+
+                sb.Append($"{Util.FormatSQL(colVal.Column)}={colVal.Value}");
+                if (i < _newColumnValues.Count - 1)
                     sb.Append(", ");
             }
 
-            if (_condition != null)
-                sb.Append(_condition.Generate());
+            sb.Append(_condition?.GenerateStatement());
             return sb.ToString();
         }
+
+        /// <summary>
+        /// Creates an UPDATE command from the provided connection using DbParameters.
+        /// </summary>
+        /// <param name="command"></param>
+        public DbCommand GenerateCommand(DbConnection connection)
+        {
+            if (_newColumnValues.Count == 0)
+                throw new Exception("Can't update table without columns to be updated.");
+            var command = connection.CreateCommand();
+            StringBuilder sb = new StringBuilder($"UPDATE {SqlTableHelper.GetTableName<T>()} SET ");
+            for (int i = 0; i < _newColumnValues.Count; i++)
+            {
+                var colVal = _newColumnValues[i];
+                var param = command.CreateParameter();
+                var paramName = Util.GetUniqueParameterName();
+                param.ParameterName = paramName;
+                param.Value = colVal.Value;
+                param.DbType = colVal.ValueType;
+                command.Parameters.Add(param);
+
+                sb.Append($"{Util.FormatSQL(colVal.Column)}={ProviderSpecific.ParameterPrefix}{paramName}");
+                if (i < _newColumnValues.Count - 1)
+                    sb.Append(", ");
+            }
+            command.CommandText += sb.ToString();
+            _condition?.GenerateCommand(command);
+            return command;
+        }
+
+        public override string ToString()
+        {
+            return GenerateStatement();
+        }
+    }
+
+    internal struct ColumnWithValue
+    {
+        public string Column { get; set; }
+        public string Value { get; set; }
+        public DbType ValueType { get; set; }
     }
 }

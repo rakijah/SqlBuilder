@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 
@@ -10,13 +12,13 @@ namespace SqlBuilder
     /// </summary>
     public class BuiltSqlCondition
     {
-        private List<string> _conditionExpressions { get; }
+        private List<ConditionExpression> _conditionExpressions { get; }
         private int _currentBlockLayer;
         private bool _lastComponentWasLogicExpression = true;
 
         public BuiltSqlCondition()
         {
-            _conditionExpressions = new List<string>();
+            _conditionExpressions = new List<ConditionExpression>();
         }
 
         /// <summary>
@@ -33,7 +35,7 @@ namespace SqlBuilder
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
 
-            _conditionExpressions.Add($"{Util.FormatSQL(SqlTable.GetTableName<TFirst>(), firstColumn)}{comparisonOperator}{Util.FormatSQL(SqlTable.GetTableName<TSecond>(), secondColumn)}");
+            _conditionExpressions.Add(new ConditionExpression(typeof(TFirst), firstColumn, comparisonOperator, typeof(TSecond), secondColumn));
             return this;
         }
 
@@ -51,7 +53,7 @@ namespace SqlBuilder
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
 
-            _conditionExpressions.Add($"{Util.FormatSQL(SqlTable.GetTableName(first), firstColumn)}{comparisonOperator}{Util.FormatSQL(SqlTable.GetTableName(second), secondColumn)}");
+            _conditionExpressions.Add(new ConditionExpression(first, firstColumn, comparisonOperator, second, secondColumn));
             return this;
         }
 
@@ -62,9 +64,9 @@ namespace SqlBuilder
         /// <param name="column">The column to be compared.</param>
         /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '&lt;&gt;' '&gt;' etc.</param>
         /// <param name="value">The value to be compared against.</param>
-        public BuiltSqlCondition AddCondition<Table>(string column, string comparisonOperator, string value)
+        public BuiltSqlCondition AddCondition<Table>(string column, string comparisonOperator, string value, DbType valueType)
         {
-            return AddCondition(typeof(Table), column, comparisonOperator, value);
+            return AddCondition(typeof(Table), column, comparisonOperator, value, valueType);
         }
 
         /// <summary>
@@ -74,34 +76,13 @@ namespace SqlBuilder
         /// <param name="column">The column to be compared.</param>
         /// <param name="comparisonOperator">The sorting operator to be used. For example: '=', '&lt;&gt;' '&gt;' etc.</param>
         /// <param name="value">The value to be compared against.</param>
-        public BuiltSqlCondition AddCondition(Type tableType, string column, string comparisonOperator, string value)
+        public BuiltSqlCondition AddCondition(Type tableType, string column, string comparisonOperator, string value, DbType valueType)
         {
             if (!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
-
-            string condition = $"{Util.FormatSQL(SqlTable.GetTableName(tableType), column)}{comparisonOperator}";
-
-            var attribs = SqlTable.GetColumnAttributes(tableType);
-            if (attribs.All(x => x.ColumnName != column))
-                throw new Exception($"Table \"{tableType.FullName}\" does not contain a column named \"{column}\"");
-
-            var attr = attribs.Single(x => x.ColumnName == column);
-            condition += attr.FormatValueFor(value);
-
-            _conditionExpressions.Add(condition);
-            return this;
-        }
-
-        /// <summary>
-        /// !! UNSAFE !! Adds a directly specified condition to the clause.
-        /// This is automatically considered to be a non-logic expression.
-        /// </summary>
-        /// <param name="condition">The condition to be added (example: SubStr(column, 4)="test"</param>
-        public BuiltSqlCondition AddConditionDirect(string condition)
-        {
-            _lastComponentWasLogicExpression = false;
-            _conditionExpressions.Add(condition.Trim());
+            
+            _conditionExpressions.Add(new ConditionExpression(tableType, column, comparisonOperator, value, valueType));
             return this;
         }
 
@@ -115,7 +96,8 @@ namespace SqlBuilder
             if (!_lastComponentWasLogicExpression)
                 throw new ArgumentException("Can't add another condition without a logic expression in between.");
             _lastComponentWasLogicExpression = false;
-            _conditionExpressions.Add($"{Util.FormatSQL(SqlTable.GetTableName<Table>(), column)} IS NULL");
+
+            _conditionExpressions.Add(new ConditionExpression(typeof(Table), column));
             return this;
         }
 
@@ -133,7 +115,7 @@ namespace SqlBuilder
                 throw new Exception("Can't begin block right after a condition without a logic expressin in between.");
             _lastComponentWasLogicExpression = true;
 
-            _conditionExpressions.Add("(");
+            _conditionExpressions.Add(new ConditionExpression(BlockOrLogicOperator.OpenParenthesis));
             _currentBlockLayer++;
             return this;
         }
@@ -156,7 +138,7 @@ namespace SqlBuilder
             _lastComponentWasLogicExpression = false;
 
             _currentBlockLayer--;
-            _conditionExpressions.Add(")");
+            _conditionExpressions.Add(new ConditionExpression(BlockOrLogicOperator.ClosedParenthesis));
 
             return this;
         }
@@ -168,7 +150,7 @@ namespace SqlBuilder
         {
             if (_lastComponentWasLogicExpression)
                 throw new Exception("Can't add two logic expressions right behind each other.");
-            _conditionExpressions.Add("AND");
+            _conditionExpressions.Add(new ConditionExpression(BlockOrLogicOperator.And));
             _lastComponentWasLogicExpression = true;
             return this;
         }
@@ -180,7 +162,7 @@ namespace SqlBuilder
         {
             if (_lastComponentWasLogicExpression)
                 throw new Exception("Can't add two logic expressions right behind each other.");
-            _conditionExpressions.Add("OR");
+            _conditionExpressions.Add(new ConditionExpression(BlockOrLogicOperator.Or));
             _lastComponentWasLogicExpression = true;
             return this;
         }
@@ -188,7 +170,7 @@ namespace SqlBuilder
         /// <summary>
         /// Generates the condition string, always starting with "WHERE" ending either with an arbitrary condition or a ")".
         /// </summary>
-        public string Generate()
+        public string GenerateStatement()
         {
             if (_conditionExpressions.Count == 0)
                 throw new Exception("A WHERE clause can't contain 0 expressions.");
@@ -199,10 +181,10 @@ namespace SqlBuilder
             StringBuilder sb = new StringBuilder("WHERE ");
             for (int i = 0; i < _conditionExpressions.Count; i++)
             {
-                string c = _conditionExpressions[i];
+                string c = _conditionExpressions[i].ToString();
                 sb.Append(c);
                 if (i == _conditionExpressions.Count - 1 || c == "(") continue;
-                if (i > _conditionExpressions.Count - 2 || _conditionExpressions[i + 1] != ")")
+                if (i > _conditionExpressions.Count - 2 || _conditionExpressions[i + 1].BlockOrLogicOperator != BlockOrLogicOperator.ClosedParenthesis)
                 {
                     sb.Append(" ");
                 }
@@ -210,9 +192,29 @@ namespace SqlBuilder
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Appends the condition to the provided DbCommand using DbParameters.
+        /// </summary>
+        public void GenerateCommand(DbCommand command)
+        {
+            if (_conditionExpressions.Count == 0)
+                throw new Exception("A WHERE clause can't contain 0 expressions.");
+
+            if (_lastComponentWasLogicExpression)
+                throw new Exception("A WHERE clause can't end with a logic expression.");
+            
+            command.CommandText += " WHERE ";
+            for (int i = 0; i < _conditionExpressions.Count; i++)
+            {
+                _conditionExpressions[i].GenerateCommand(command);
+                if (i != _conditionExpressions.Count - 1)
+                    command.CommandText += " ";
+            }
+        }
+
         public override string ToString()
         {
-            return Generate();
+            return GenerateStatement();
         }
     }
 }

@@ -1,32 +1,32 @@
 # SqlBuilder  
 This library provides a quick and easy way to build an SQL command string through command-chaining. It's still in early development and currently supports `SELECT`, `INSERT`,`DELETE` and basic `ALTER TABLE` and `CREATE TABLE` commands. Sorting also needs to be redone, as there is currently no way to really specify sorting priority for multiple sorting columns. Formatting dates for specific providers is still a work in progress. 
 
-!! *Don't use this in production environments. It does not use parameters and simply interpolates values into the command string* !!
+!! *Don't use this in production environments. It uses parameters to avoid SQL injection attacks, but the project is poorly tested so safety cannot be guaranteed* !!
 
-It's basically an insecure micro-Dapper clone.
+It's basically an insecure micro-clone of Dapper / EntityFramework.
 
 # Usage  
-First, create classes that will represent the tables using the custom attributes `SqlTableName` and `SqlColumn`, like so:
+First, create classes that will represent the tables using the custom attributes `SqlTable` and `SqlColumn`, like so:
 ```csharp
-[SqlTableName("users")]
+[SqlTable("users")]
 public class Users
 {
-    [SqlColumn("id", SqlColumnType.Integer)]
+    [SqlColumn("id", DbType.Int32)]
     public string Id { get; set; }
 
-    [SqlColumn("username", SqlColumnType.String)]
+    [SqlColumn("username", DbType.String)]
     public string Username { get; set; }
 
-    [SqlColumn("password", SqlColumnType.String)]
+    [SqlColumn("password", DbType.String)]
     public string Password { get; set; }
 
-    [SqlColumn("email", SqlColumnType.String)]
+    [SqlColumn("email", DbType.String)]
     public string Email { get; set; }
         
-    [SqlColumn("lastname", SqlColumnType.String)]
+    [SqlColumn("lastname", DbType.String)]
     public string LastName { get; set; }
 
-    [SqlColumn("firstname", SqlColumnType.String)]
+    [SqlColumn("firstname", DbType.String)]
     public string FirstName { get; set; }
 }
 ```
@@ -115,10 +115,10 @@ The `BuiltCreateCommand` exposes the following methods:
 * `ToString`/`Generate`: Generate the actual SQL command string.
 
 # Attribute classes
-### SqlTableName
+### SqlTable
 This attribute allows you to specify a table name on a table class, like so:
 ```csharp
-[SqlTableName("dbo.customers")]
+[SqlTable("dbo.customers")]
 public class Customers
 {
 ...
@@ -126,20 +126,17 @@ public class Customers
 ### SqlColumn
 This attribute allows you to specify the name and type of a column on a property of a table class, like so:
 ```csharp
-[SqlTableName("dbo.customers")]
+[SqlTable("dbo.customers")]
 public class Customers
 {
-    [SqlColumn("customerid", SqlColumnType.Integer)]
+    [SqlColumn("customerid", DbType.Int32)]
     public int ID { get; set; }
     
-    [SqlColumn("name", SqlColumnType.String)]
+    [SqlColumn("name", DbType.String)]
     public string Lastname { get; set; }
-    
-    [SqlColumn("birth_date", SqlColumnType.Date)]
-    public DateTime BirthDate { get; set; }
 }
 ```
-Currently, only `Integer`, `String` and `Date` are supported. Date also has conversion problems due to different providers sometimes using completely different approaches to storing dates (for example SQLite doesn't store dates at all and simply uses TEXT/VARCHAR columns instead).
+Currently, only `Integer` and `String`  are supported. Date has conversion problems due to different providers sometimes using completely different approaches to storing dates (for example SQLite doesn't store dates at all and simply uses TEXT/VARCHAR columns instead).
 
 ### SqlForeignKey
 Allows you to query entities from foreign key constraints, like so:
@@ -150,7 +147,7 @@ public class BankAccount
     [SqlColumn("accountid", SqlColumnType.String)]
     public string Id { get; set; }
 
-    [SqlColumn("customerid", SqlColumnType.String)]
+    [SqlColumn("customerid", DbType.String)]
     [SqlForeignKey("id", typeof(Customer))]
     public Customer Customer { get; set; }
 }
@@ -158,10 +155,10 @@ public class BankAccount
 [SqlTable("customer")]
 public class Customer
 {
-    [SqlColumn("id", SqlColumnType.Integer)]
+    [SqlColumn("id", DbType.Int32)]
     public string Id { get; set; }
 
-    [SqlColumn("lastname", SqlColumnType.String)]
+    [SqlColumn("lastname", DbType.String)]
     public string Name { get; set; }
 }
 

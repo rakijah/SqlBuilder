@@ -87,5 +87,40 @@ namespace SqlBuilder
                 }
             }
         }
+
+        public static bool SupportsLimit
+        {
+            get
+            {
+                switch (SqlBuild.Options.Provider)
+                {
+                    case DatabaseProvider.Oracle10GOrLater:
+                    case DatabaseProvider.OracleBefore10G:
+                        return false;
+                    default:
+                        return true;
+                }
+                    
+            }
+        }
+
+        public static string ParameterPrefix
+        {
+            get
+            {
+                switch (SqlBuild.Options.Provider)
+                {
+                    case DatabaseProvider.Oracle10GOrLater:
+                    case DatabaseProvider.OracleBefore10G:
+                        return ":";
+                    case DatabaseProvider.MySql:
+                    case DatabaseProvider.SQLite:
+                    case DatabaseProvider.SqlServer:
+                        return "@";
+                    default:
+                        return string.Empty;
+                }
+            }
+        }
     }
 }

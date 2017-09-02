@@ -8,7 +8,7 @@ namespace SqlBuilder
     /// <summary>
     /// A helper class to extract attribute values from table classes.
     /// </summary>
-    public static class SqlTable
+    public static class SqlTableHelper
     {
         //Caching to reduce the performance impact of reflection.
         private static readonly Dictionary<Type, string> _tableNames = new Dictionary<Type, string>();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 
@@ -18,21 +19,21 @@ namespace SqlBuilder
         internal BuiltInsertCommand()
         {
             _rowValues = new List<BuiltValueList<T>>();
-            _table = SqlTable.GetTableName<T>();
-            _columns = SqlTable.GetColumnNames<T>();
+            _table = SqlTableHelper.GetTableName<T>();
+            _columns = SqlTableHelper.GetColumnNames<T>();
         }
 
         internal BuiltInsertCommand(params string[] columns)
         {
             _rowValues = new List<BuiltValueList<T>>();
-            _table = SqlTable.GetTableName<T>();
+            _table = SqlTableHelper.GetTableName<T>();
             _columns = new List<string>(columns);
         }
 
         public BuiltInsertCommand<T> AddItem(T item)
         {
             var value = new BuiltValueList<T>(_columns);
-            foreach (var p2c in SqlTable.PropertiesToColumnNames<T>())
+            foreach (var p2c in SqlTableHelper.PropertiesToColumnNames<T>())
             {
                 if (!_columns.Contains(p2c.Value))
                     continue;
@@ -76,7 +77,7 @@ namespace SqlBuilder
         /// <summary>
         /// Generates the INSERT command string, starting with "INSERT INTO" and always ending with a ")".
         /// </summary>
-        public string Generate()
+        public string GenerateStatement()
         {
             if (string.IsNullOrWhiteSpace(_table))
                 throw new Exception("Use Into to initialise the table and columns before calling ToString.");
@@ -93,16 +94,45 @@ namespace SqlBuilder
             sb.Append(") VALUES ");
             for (int i = 0; i < _rowValues.Count; i++)
             {
-                sb.Append(_rowValues[i].Generate());
+                sb.Append(_rowValues[i].GenerateStatement());
                 if (i != _rowValues.Count - 1)
                     sb.Append(", ");
             }
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Creates an INSERT INTO command from the provided connection using DbParameters.
+        /// </summary>
+        public DbCommand GenerateCommand(DbConnection connection)
+        {
+            if (string.IsNullOrWhiteSpace(_table))
+                throw new Exception("Use Into to initialise the table and columns before calling ToString.");
+
+            if (_columns == null || _columns.Count == 0)
+                throw new Exception("Use Into to initialise the columns of the table before calling ToString.");
+
+            if (_rowValues.Count == 0)
+                throw new Exception("Use CreateValues before calling ToString.");
+            var command = connection.CreateCommand();
+            StringBuilder sb = new StringBuilder($"INSERT INTO {Util.FormatSQL(_table)} (");
+            var colFormatted = _columns.Select(Util.FormatSQL).ToList().Zip(", ");
+            sb.Append(colFormatted);
+            sb.Append(") VALUES ");
+            command.CommandText += sb.ToString();
+            
+            for (int i = 0; i < _rowValues.Count; i++)
+            {
+                _rowValues[i].GenerateCommand(command);
+                if (i != _rowValues.Count - 1)
+                    command.CommandText += ", ";
+            }
+            return command;
+        }
+
         public override string ToString()
         {
-            return Generate();
+            return GenerateStatement();
         }
     }
 }

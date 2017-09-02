@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Text;
 
 namespace SqlBuilder
@@ -28,11 +29,11 @@ namespace SqlBuilder
             switch (mode)
             {
                 case SqlSortMode.ASCENDING:
-                    _sortingParametersAscending.Add($"{Util.FormatSQL(SqlTable.GetTableName<T>(), column)}");
+                    _sortingParametersAscending.Add($"{Util.FormatSQL(SqlTableHelper.GetTableName<T>(), column)}");
                     break;
 
                 case SqlSortMode.DESCENDING:
-                    _sortingParametersDescending.Add($"{Util.FormatSQL(SqlTable.GetTableName<T>(), column)}");
+                    _sortingParametersDescending.Add($"{Util.FormatSQL(SqlTableHelper.GetTableName<T>(), column)}");
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
@@ -52,7 +53,7 @@ namespace SqlBuilder
         /// <summary>
         /// Generates the ORDER BY clause string, always starting with "ORDER BY" and ending with either a column name or "ASC/DESC".
         /// </summary>
-        public string Generate()
+        public string GenerateStatement()
         {
             if (_sortingParametersAscending.Count == 0 && _sortingParametersDescending.Count == 0)
             {
@@ -74,9 +75,35 @@ namespace SqlBuilder
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Appends the ORDER BY clause to the provided DbCommand using DbParameters.
+        /// </summary>
+        public void GenerateCommand(DbCommand command)
+        {
+            if (_sortingParametersAscending.Count == 0 && _sortingParametersDescending.Count == 0)
+            {
+                return;
+            }
+
+            StringBuilder sb = new StringBuilder("ORDER BY ");
+            if (_sortingParametersAscending.Count > 0)
+            {
+                sb.Append(_sortingParametersAscending.Zip(", "));
+                sb.Append(" ASC, ");
+            }
+
+            if (_sortingParametersDescending.Count > 0)
+            {
+                sb.Append(_sortingParametersDescending.Zip(", "));
+                sb.Append(" DESC");
+            }
+            
+            command.CommandText += sb.ToString();
+        }
+
         public override string ToString()
         {
-            return Generate();
+            return GenerateStatement();
         }
     }
 

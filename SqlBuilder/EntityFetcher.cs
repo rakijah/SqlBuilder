@@ -1,8 +1,10 @@
 using SqlBuilder.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Globalization;
+using System.Linq;
 using System.Reflection;
 
 namespace SqlBuilder
@@ -23,7 +25,7 @@ namespace SqlBuilder
         {
             _connection = connection;
         }
-
+        /*
         /// <summary>
         /// Returns a reader for the specified amount of rows for the specified entity type.
         /// </summary>
@@ -53,11 +55,7 @@ namespace SqlBuilder
             if (amountOfRows > 0)
                 select.Limit(amountOfRows);
 
-            using (var command = _connection.CreateCommand())
-            {
-                command.CommandText = select.Generate();
-                return command.ExecuteReader();
-            }
+            return select.GenerateCommand(_connection).ExecuteReader();
         }
 
         /// <summary>
@@ -74,7 +72,7 @@ namespace SqlBuilder
                 return command.ExecuteReader();
             }
         }
-
+        */
         /// <summary>
         /// Fetches and initializes all available rows for entities of type T.
         /// </summary>
@@ -83,13 +81,17 @@ namespace SqlBuilder
         /// <returns>An enumerable of constructed entities of type T.</returns>
         public IEnumerable<T> All<T>(BuiltSqlCondition condition = null) where T : new()
         {
-            var reader = GetReader<T>(condition);
-            List<T> resultSet = new List<T>();
+            var command = _connection.CreateCommand();
+            command.CommandText = SqlBuild.Select<T>().GenerateStatement();
+            condition?.GenerateCommand(command);
+
+            var reader = command.ExecuteReader();
+            List <T> resultSet = new List<T>();
             while (reader.Read())
             {
                 resultSet.Add(BuildSingle<T>(reader));
             }
-
+            command.Dispose();
             return resultSet;
         }
 
@@ -102,8 +104,43 @@ namespace SqlBuilder
         /// <returns>An enumerable of constructed entities of type T.</returns>
         public IEnumerable<T> Fetch<T>(BuiltSqlCondition condition, int amountOfRows = -1) where T : new()
         {
-            var reader = GetReader<T>(condition, amountOfRows);
+            
+            var select = SqlBuild.Select<T>();
+            select.Condition = condition;
+            if (amountOfRows != -1)
+            {
+                if (ProviderSpecific.SupportsLimit)
+                {
+                    select.Limit(amountOfRows);
+                }
+            }
+                
+            var command = select.GenerateCommand(_connection);
+
+            var reader = command.ExecuteReader();
             List<T> resultSet = new List<T>();
+            if (!ProviderSpecific.SupportsLimit && amountOfRows != -1)
+            {
+                int rows = 0;
+                while (reader.Read() && rows < amountOfRows)
+                {
+                    resultSet.Add(BuildSingle<T>(reader));
+                    rows++;
+                }
+            }
+            else
+            {
+                while (reader.Read())
+                {
+                    resultSet.Add(BuildSingle<T>(reader));
+                }
+            }
+            
+            command.Dispose();
+            return resultSet;
+
+            //var reader = GetReader<T>(condition, amountOfRows);
+            //List<T> resultSet = new List<T>();
             while (reader.Read())
             {
                 resultSet.Add(BuildSingle<T>(reader));
@@ -119,11 +156,7 @@ namespace SqlBuilder
         /// <returns>The constructed entity of type T.</returns>
         public T Single<T>(BuiltSqlCondition condition = null) where T : new()
         {
-            var reader = GetReader<T>(condition, 1);
-            if (!reader.HasRows)
-                return default(T);
-
-            return BuildSingle<T>(reader);
+            return Fetch<T>(condition, 1).FirstOrDefault();
         }
 
         /// <summary>
@@ -151,7 +184,7 @@ namespace SqlBuilder
         /// <returns>The constructed entity of type T.</returns>
         internal object BuildSingle(Type tableType, DbDataReader reader)
         {
-            var propToCol = SqlTable.PropertiesToColumnNames(tableType);
+            var propToCol = SqlTableHelper.PropertiesToColumnNames(tableType);
             var entity = Activator.CreateInstance(tableType);
             foreach (var property in propToCol)
             {
@@ -161,21 +194,26 @@ namespace SqlBuilder
                 {
                     switch (sqlColumnAttribute.Type)
                     {
-                        case SqlColumnType.Integer:
+                        case DbType.Int16:
+                        case DbType.Int32:
+                        case DbType.Int64:
                             property.Key.SetValue(entity, Convert.ToInt32(reader[property.Value]), null);
                             break;
-
-                        case SqlColumnType.String:
+                        case DbType.String:
+                        case DbType.StringFixedLength:
+                        case DbType.AnsiString:
+                        case DbType.AnsiStringFixedLength:
                             string value = reader[property.Value].ToString();
                             property.Key.SetValue(entity, value, null);
                             break;
-
-                        case SqlColumnType.Date:
+                        case DbType.Date:
+                        case DbType.DateTime:
+                        case DbType.DateTime2:
+                        case DbType.DateTimeOffset:
                             string stringValue = reader[property.Value].ToString();
                             DateTime dateValue = DateTime.ParseExact(stringValue, ProviderSpecific.DotNetDateFormatString, CultureInfo.InvariantCulture);
                             property.Key.SetValue(entity, dateValue, null);
                             break;
-
                         default:
                             throw new Exception("Unsupported column type.");
                     }
@@ -199,9 +237,8 @@ namespace SqlBuilder
                                 .Join(tableType, foreignTable, sqlColumnAttribute.ColumnName, foreignKey.ForeignTableColumnName)
                                 .Where(
                                     new BuiltSqlCondition()
-                                        .AddCondition(tableType, sqlColumnAttribute.ColumnName, "=", (string)reader[sqlColumnAttribute.ColumnName]));
-                            var foreignReader =
-                                GetReader(foreignTable, foreignSelect.Generate());
+                                        .AddCondition(tableType, sqlColumnAttribute.ColumnName, "=", (string)reader[sqlColumnAttribute.ColumnName], sqlColumnAttribute.Type));
+                            var foreignReader = foreignSelect.GenerateCommand(_connection).ExecuteReader();
                             if (!foreignReader.Read())
                                 continue;
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Text;
 
 namespace SqlBuilder
@@ -15,7 +16,7 @@ namespace SqlBuilder
 
         internal BuiltAlterTableCommand()
         {
-            _table = SqlTable.GetTableName<T>();
+            _table = SqlTableHelper.GetTableName<T>();
             _components = new List<string>();
         }
 
@@ -108,7 +109,7 @@ namespace SqlBuilder
         /// <summary>
         /// Generates the ALTER TABLE command string.
         /// </summary>
-        public string Generate()
+        public string GenerateStatement()
         {
             if (_components.Count == 0)
                 throw new Exception("Can't create an ALTER TABLE command without any tasks.");
@@ -118,9 +119,24 @@ namespace SqlBuilder
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Creates an ALTER TABLE command from the provided connection using DbParameters.
+        /// </summary>
+        public DbCommand GenerateCommand(DbConnection connection)
+        {
+            if (_components.Count == 0)
+                throw new Exception("Can't create an ALTER TABLE command without any tasks.");
+
+            var cmd = connection.CreateCommand();
+            StringBuilder sb = new StringBuilder($"ALTER TABLE {Util.FormatSQL(_table)} ");
+            sb.Append(_components.Zip(", "));
+            cmd.CommandText = sb.ToString();
+            return cmd;
+        }
+
         public override string ToString()
         {
-            return Generate();
+            return GenerateStatement();
         }
     }
 }

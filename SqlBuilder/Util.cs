@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -51,6 +51,17 @@ namespace SqlBuilder
                 throw new Exception("Configure() must be called before building commands.");
 
             return $"{FormatSQL(table)}.{FormatSQL(column)}";
+        }
+
+        private static long _uniqueParameterPrefix;
+        public static string GetUniqueParameterName()
+        {
+            return $"param{_uniqueParameterPrefix++}";
+        }
+
+        public static void ResetUniqueParameterName()
+        {
+            _uniqueParameterPrefix = 0;
         }
     }
 }

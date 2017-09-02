@@ -1,6 +1,8 @@
 using SqlBuilder.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 
@@ -17,8 +19,8 @@ namespace SqlBuilder
         /// </summary>
         public BuiltCreateCommand()
         {
-            _tableName = SqlTable.GetTableName<T>();
-            _columns = SqlTable.GetColumnAttributes<T>();
+            _tableName = SqlTableHelper.GetTableName<T>();
+            _columns = SqlTableHelper.GetColumnAttributes<T>();
             if (_columns.Count == 0)
                 throw new Exception("Can't create empty table.");
         }
@@ -39,7 +41,7 @@ namespace SqlBuilder
         /// <summary>
         /// Generates the CREATE TABLE command string.
         /// </summary>
-        public string Generate()
+        public string GenerateStatement()
         {
             StringBuilder sb = new StringBuilder($"CREATE TABLE {_tableName}(");
             for (int i = 0; i < _columns.Count; i++)
@@ -48,15 +50,15 @@ namespace SqlBuilder
                 sb.Append($"{col.ColumnName} ");
                 switch (col.Type)
                 {
-                    case SqlColumnType.Integer:
-                        sb.Append("int");
+                    case DbType.Int32:
+                        sb.Append("INT");
                         break;
 
-                    case SqlColumnType.String:
-                        sb.Append("varchar(50)");
+                    case DbType.String:
+                        sb.Append("VARCHAR(50)");
                         break;
 
-                    case SqlColumnType.Date:
+                    case DbType.Date:
                         sb.Append(ProviderSpecific.DateType);
                         break;
                 }
@@ -70,9 +72,47 @@ namespace SqlBuilder
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Creates a CREATE TABLE command from the provided connection using DbParameters.
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <returns></returns>
+        public DbCommand GenerateCommand(DbConnection connection)
+        {
+            var cmd = connection.CreateCommand();
+            StringBuilder sb = new StringBuilder($"CREATE TABLE {_tableName}(");
+            for (int i = 0; i < _columns.Count; i++)
+            {
+                var col = _columns[i];
+                sb.Append($"{col.ColumnName} ");
+                switch (col.Type)
+                {
+                    case DbType.Int32:
+                        sb.Append("INT");
+                        break;
+
+                    case DbType.String:
+                        sb.Append("VARCHAR(50)");
+                        break;
+
+                    case DbType.Date:
+                        sb.Append(ProviderSpecific.DateType);
+                        break;
+                }
+                if (col.ColumnName == _primaryKeyColumn)
+                    sb.Append(" PRIMARY KEY");
+
+                if (i != _columns.Count - 1)
+                    sb.Append(", ");
+            }
+            sb.Append(")");
+            cmd.CommandText = sb.ToString();
+            return cmd;
+        }
+
         public override string ToString()
         {
-            return Generate();
+            return GenerateStatement();
         }
     }
 }

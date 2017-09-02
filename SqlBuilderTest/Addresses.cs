@@ -1,3 +1,4 @@
+using System.Data;
 using SqlBuilder.Attributes;
 
 namespace SqlBuilderTest
@@ -5,16 +6,16 @@ namespace SqlBuilderTest
     [SqlTable("addresses")]
     public class Addresses
     {
-        [SqlColumn("userid", SqlColumnType.Integer)]
+        [SqlColumn("userid", DbType.Int32)]
         public string UserID { get; set; }
 
-        [SqlColumn("postcode", SqlColumnType.String)]
+        [SqlColumn("postcode", DbType.String)]
         public string Postcode { get; set; }
 
-        [SqlColumn("state", SqlColumnType.String)]
+        [SqlColumn("state", DbType.String)]
         public string State { get; set; }
 
-        [SqlColumn("street", SqlColumnType.String)]
+        [SqlColumn("street", DbType.String)]
         public string Street { get; set; }
     }
 }

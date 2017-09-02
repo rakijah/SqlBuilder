@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 
@@ -38,11 +40,11 @@ namespace SqlBuilder
         /// <param name="selectAllColumns">Whether all columns from this table should be added to the selection.</param>
         public BuiltSelectCommand AddTable(Type tableType, bool selectAllColumns = true)
         {
-            string tableName = SqlTable.GetTableName(tableType);
+            string tableName = SqlTableHelper.GetTableName(tableType);
             _fromTables.Add(tableName);
 
             if (selectAllColumns)
-                AddColumns(tableType, SqlTable.GetColumnNames(tableType).ToArray());
+                AddColumns(tableType, SqlTableHelper.GetColumnNames(tableType).ToArray());
 
             return this;
         }
@@ -64,9 +66,9 @@ namespace SqlBuilder
         /// <param name="columns">The columns to be selected.</param>
         public BuiltSelectCommand AddColumns(Type tableType, params string[] columns)
         {
-            string tableName = SqlTable.GetTableName(tableType);
-            if (!SqlTable.ContainsAllColumns(tableType, columns))
-                throw new Exception($"Table \"{SqlTable.GetTableName(tableType)}\" does not contain all columns specified.");
+            string tableName = SqlTableHelper.GetTableName(tableType);
+            if (!SqlTableHelper.ContainsAllColumns(tableType, columns))
+                throw new Exception($"Table \"{SqlTableHelper.GetTableName(tableType)}\" does not contain all columns specified.");
 
             foreach (string column in columns)
             {
@@ -83,9 +85,9 @@ namespace SqlBuilder
         /// <typeparam name="T">The table containing the columns.</typeparam>
         public BuiltSelectCommand AddColumns<T>()
         {
-            foreach (string column in SqlTable.GetColumnNames<T>())
+            foreach (string column in SqlTableHelper.GetColumnNames<T>())
             {
-                string fullyQualified = $"{Util.FormatSQL(SqlTable.GetTableName<T>(), column)}";
+                string fullyQualified = $"{Util.FormatSQL(SqlTableHelper.GetTableName<T>(), column)}";
                 if (!_selectedColumns.Contains(fullyQualified))
                     _selectedColumns.Add(fullyQualified);
             }
@@ -114,14 +116,14 @@ namespace SqlBuilder
         /// <param name="onColumn">The column to use from the existing table.</param>
         public BuiltSelectCommand Join<ToJoin, On>(string toJoinColumn, string onColumn)
         {
-            if (!SqlTable.ContainsColumn<ToJoin>(toJoinColumn) ||
-               !SqlTable.ContainsColumn<On>(onColumn))
+            if (!SqlTableHelper.ContainsColumn<ToJoin>(toJoinColumn) ||
+               !SqlTableHelper.ContainsColumn<On>(onColumn))
                 throw new Exception("The specified tables do not contain the specified columns.");
 
             _joins.Add(new SqlJoin
             {
-                FirstTable = SqlTable.GetTableName<On>(),
-                SecondTable = SqlTable.GetTableName<ToJoin>(),
+                FirstTable = SqlTableHelper.GetTableName<On>(),
+                SecondTable = SqlTableHelper.GetTableName<ToJoin>(),
                 FirstColumn = onColumn,
                 SecondColumn = toJoinColumn
             });
@@ -137,14 +139,14 @@ namespace SqlBuilder
         /// <param name="onColumn">The column to use from the existing table.</param>
         public BuiltSelectCommand Join(Type toJoin, Type on, string toJoinColumn, string onColumn)
         {
-            if (!SqlTable.ContainsColumn(toJoin, toJoinColumn) ||
-                !SqlTable.ContainsColumn(on, onColumn))
+            if (!SqlTableHelper.ContainsColumn(toJoin, toJoinColumn) ||
+                !SqlTableHelper.ContainsColumn(on, onColumn))
                 throw new Exception("The specified tables do not contain the specified columns.");
 
             _joins.Add(new SqlJoin
             {
-                FirstTable = SqlTable.GetTableName(on),
-                SecondTable = SqlTable.GetTableName(toJoin),
+                FirstTable = SqlTableHelper.GetTableName(on),
+                SecondTable = SqlTableHelper.GetTableName(toJoin),
                 FirstColumn = onColumn,
                 SecondColumn = toJoinColumn
             });
@@ -183,10 +185,11 @@ namespace SqlBuilder
             return this;
         }
 
+        
         /// <summary>
         /// Generates the SELECT command string.
         /// </summary>
-        public string Generate()
+        public string GenerateStatement()
         {
             if (_fromTables.Count == 0)
                 throw new FormatException("Use .AddTable at least once before generating the Sql_Server string.");
@@ -195,7 +198,7 @@ namespace SqlBuilder
             sb.Append(_selectedColumns.Count == 0 ? "*" : $"{_selectedColumns.Zip(", ")}");
 
             sb.Append($" FROM {_fromTables.Select(Util.FormatSQL).ToList().Zip(", ")}");
-            
+
             if (_joins.Count > 0)
             {
                 sb.Append($" {_joins.Select(j => j.ToString()).ToList().Zip(" ")}");
@@ -218,9 +221,44 @@ namespace SqlBuilder
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Creates a SELECT command from the provided connection using DbParameters.
+        /// </summary>
+        public DbCommand GenerateCommand(DbConnection connection)
+        {
+            if (_fromTables.Count == 0)
+                throw new FormatException("Use .AddTable at least once before generating the Sql_Server string.");
+
+            DbCommand cmd = connection.CreateCommand();
+
+            StringBuilder sb = new StringBuilder("SELECT ");
+            sb.Append(_selectedColumns.Count == 0 ? "*" : $"{_selectedColumns.Zip(", ")}");
+
+            sb.Append($" FROM {_fromTables.Select(Util.FormatSQL).ToList().Zip(", ")}");
+
+            if (_joins.Count > 0)
+            {
+                sb.Append($" {_joins.Select(j => j.ToString()).ToList().Zip(" ")}");
+            }
+            cmd.CommandText += sb.ToString();
+
+            Condition?.GenerateCommand(cmd);
+            if (_sort != null || !string.IsNullOrWhiteSpace(_limit))
+            {
+                cmd.CommandText += " ";
+            }
+            _sort?.GenerateCommand(cmd);
+
+            if (!string.IsNullOrWhiteSpace(_limit))
+            {
+                cmd.CommandText += $" {_limit}";
+            }
+            return cmd;
+        }
+
         public override string ToString()
         {
-            return Generate();
+            return GenerateStatement();
         }
     }
 
